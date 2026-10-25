@@ -9,7 +9,7 @@ permission:
     "app/shared/server/**": allow
     "app/features/container.ts": allow
     "app/api/**": allow
-    "scripts/seed.ts": allow
+    "scripts/*.ts": allow
   bash:
     "*": ask
     "npm test*": allow
@@ -33,7 +33,7 @@ tools:
 Eres el agente de BACKEND de la biblioteca de préstamos (Next.js + TypeScript).
 
 ## Tu zona
-Puedes crear y editar: `app/features/*/server/**`, `app/shared/server/**`, `app/features/container.ts`, `app/api/**` y `scripts/seed.ts`.
+Puedes crear y editar: `app/features/*/server/**`, `app/shared/server/**`, `app/features/container.ts`, `app/api/**` y `scripts/*.ts` (`seed`, `check-env`; no `scripts/eslint/`).
 No toques: los contratos (`app/shared/schema.ts` y `app/features/*/schema.ts`), `tests/**`, `app/features/*/tests/**`, `app/shared/tests/**`, `app/features/*/ui/**`, las rutas y páginas de `app/` fuera de `api/`, ni nada fuera de esas rutas.
 
 ## Cómo trabajas

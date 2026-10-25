@@ -46,6 +46,17 @@ Personal: F1, F3, listar cuentas. Público: F2, ingreso.
 - **Dado** que ya existe un `ADMINISTRADOR`, **cuando** se llama a `provision` con otro `ADMINISTRADOR` (correo distinto), **entonces** `ConflictError` y no se crea la cuenta.
 - **Dado** que ya existe un `ADMINISTRADOR`, **cuando** se provisionan otros roles, **entonces** se crean con normalidad.
 
+## Interfaz de módulos (añadida tras la prueba de reconstrucción; no cambia ninguna regla)
+| Pieza | Firma |
+| --- | --- |
+| `app/features/accounts/server/repository.ts` | `MemberRecord = { id: Id; name; email; role: Role; active: boolean }` (`id` = `uid` de Firebase); `MemberRepository` asíncrono: `create(record)` (lanza `ConflictError` si es un segundo ADMINISTRADOR), `findById`, `findByEmail`, `existsWithRole(role)`, `list()` |
+| `app/features/accounts/server/identity.ts` | `IdentityProvider`: `createUser({ email, password, name }): Promise<{ uid }>` (`ConflictError` si el correo existe), `deleteUser(uid)`, `verifyIdToken(idToken): Promise<{ uid } \| null>`, `createSessionCookie(idToken, ttlSeconds): Promise<string>`. Implementaciones: `createFirebaseIdentityProvider(auth)` y `createMemoryIdentityProvider()` (esta última añade `signIn(email, password): Promise<string \| null>` y `verifySessionCookie(cookie)` para simular al cliente en las pruebas) |
+| `app/features/accounts/server/member-service.ts` | `createMemberService({ members, identity })` → `{ register, provision, get, list }`, todo `async`; `provision` va en un tipo aparte (`MemberAdminService`) que no ven las rutas |
+| `app/features/accounts/server/auth-service.ts` | `createAuthService({ members, identity })` → `{ login(input: SessionLoginInput): Promise<{ member: Member; sessionCookie: string }> }` |
+| Rutas | `POST /api/auth/login` (cuerpo `{ id_token }`; fija la cookie de sesión y responde el `Member`), `POST /api/auth/logout`, `GET /api/auth/me`, `POST /api/members` y `GET /api/members` (personal) |
+
+Aclaraciones de las reglas 3 y 4: la contraseña errónea y el correo inexistente se detectan en el SDK de cliente de Firebase antes de llamar al servidor; el servicio recibe un `id_token`, y un token inválido, una cuenta de Authentication sin documento `members` o una cuenta inactiva dan el mismo `UnauthorizedError("Credenciales inválidas")`. Un fallo de infraestructura al verificar el token (red caída) no se disfraza: da 500. `list` no garantiza ningún orden.
+
 ## Fuera de alcance
 F10–F13 (autorregistro, solicitud de docente, creación de bibliotecarios), préstamos (F5–F8) y el lector.
 

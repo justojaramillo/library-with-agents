@@ -33,6 +33,14 @@ Pública: no requiere sesión.
 ## Bordes
 Texto vacío · 100 caracteres · 101 caracteres · solo espacios.
 
+## Interfaz de módulos (añadida tras la prueba de reconstrucción; no cambia ninguna regla)
+| Pieza | Firma |
+| --- | --- |
+| `app/features/catalog/server/repository.ts` | `BookRecord = { id: Id; isbn; title; author; copies }`; `BookRepository` asíncrono: `create(book): Promise<BookRecord>` (lanza `ConflictError` si el ISBN existe), `findById`, `findByIsbn`, `search(q)`; `ActiveLoansReader.countActiveByBook(bookId: Id): Promise<number>` |
+| `app/features/catalog/server/book-service.ts` | `createBookService({ books, loans })` → `{ create(input: CreateBookInput): Promise<Book>; search(q: string): Promise<Book[]> }` |
+| Repositorios | `createMemoryBookRepository()`, `createFirestoreBookRepository(db)` (ISBN único garantizado en una transacción; los documentos inválidos se validan con Zod al leer) |
+| Rutas | `POST /api/books` (personal; 201 `Book`) y `GET /api/books?q=` (público; 200 `Book[]`); ambas siguen las reglas de `docs/specs/F0-base-del-proyecto.md` (origen, sesión, errores) |
+
 ## Fuera de alcance
 Paginación, ordenar por relevancia, filtros por disponibilidad.
 

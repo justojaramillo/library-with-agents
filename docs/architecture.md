@@ -84,7 +84,7 @@ La ruta o página obtiene el servicio de `@/features/container`; nunca construye
 
 | Agente | Zona |
 | --- | --- |
-| backend | `app/features/*/server/**`, `app/features/container.ts`, `app/shared/server/**`, `app/api/**`, `scripts/seed.ts` |
+| backend | `app/features/*/server/**`, `app/features/container.ts`, `app/shared/server/**`, `app/api/**`, `scripts/*.ts` (`seed`, `check-env`; no `scripts/eslint/`) |
 | frontend | `app/features/*/ui/**`, `app/shared/ui/**`, rutas y páginas de `app/` (sin `api`, `features` ni `shared`) |
 | tests | `tests/**`, `app/features/*/tests/**`, `app/shared/tests/**` |
 | security | solo lectura |

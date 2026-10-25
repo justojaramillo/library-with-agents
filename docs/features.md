@@ -1,5 +1,7 @@
 # Lista de features (FDD)
 
+Para construir el proyecto desde un directorio vacío, ver `docs/bootstrap.md`.
+
 Una feature = **acción + resultado + objeto**, pequeña y con valor visible ("Prestar un libro a una persona"). Se construyen una por una, con su especificación (`write-spec`) aprobada por la persona **antes** de delegar. Las reglas de código están en `AGENTS.md`.
 
 ## Roles
@@ -31,6 +33,7 @@ Ola = orden de construcción sugerido (cada ola es entregable por sí sola).
 | Id | Feature | Rol | Ola |
 | --- | --- | --- | --- |
 | **Base** | | | |
+| F0 | Base del proyecto: errores y HTTP, sesión, Firebase, entorno, datos de ejemplo y puertas de calidad (`docs/specs/F0-base-del-proyecto.md`) | Sistema | 1 |
 | F1 | Registrar un libro | Personal | 1 |
 | F2 | Buscar libros por título o autor | Público | 1 |
 | F3 | Registrar una cuenta desde el mostrador (`EXTERNO`/`ESTUDIANTE`) | Personal | 1 |
@@ -69,7 +72,7 @@ Ola = orden de construcción sugerido (cada ola es entregable por sí sola).
 | F31 | Guardar el progreso y los marcadores de lectura | Prestatario | 3 |
 | F32 | Registrar y consultar los incidentes de lectura | Sistema · Personal (consulta) | 3 |
 | **Interfaz** | | | |
-| F33 | Barra de navegación con sesión y cierre de sesión | Todos | 1 |
+| F33 | Barra de navegación con sesión y cierre de sesión; la opción «Cuentas» solo existe para bibliotecario y administrador; incluye las pantallas base `/`, `/login` y `/cuentas` | Todos | 1 |
 | F34 | Pantalla de préstamos y devoluciones (`/prestamos`) | Personal | 1 |
 | F35 | Pantallas «Mis préstamos» y «Mis vencidos» | Prestatario | 1 |
 | F36 | Formularios para registrar libros y cuentas | Personal | 2 |
@@ -167,4 +170,4 @@ Los `schema.ts` son el acuerdo entre agentes y solo los cambia el orquestador. C
 | `POST /api/reader/:loan_id/incidents` · `GET /api/reader/incidents` | F32 | Lector · Personal |
 | `POST /api/fines/:id/pay` | F26 | Personal |
 
-Interfaces mínimas (frontend): `/` (búsqueda, F2), `/login` (F4), `/cuentas` (lista, personal), `/prestamos` (F34), `/mis-prestamos` y `/mis-vencidos` (F35), `/registro` (F10), `/libros/nuevo` y `/cuentas/nuevo` (F36), `/solicitudes` y `/personal` (F37), `/leer/[loanId]` (F28–F31).
+Interfaces mínimas (frontend): `/` (búsqueda, F2), `/login` (F4), `/cuentas` (lista; solo personal: la opción de menú solo la ven bibliotecario y administrador), `/prestamos` (F34), `/mis-prestamos` y `/mis-vencidos` (F35), `/registro` (F10), `/libros/nuevo` y `/cuentas/nuevo` (F36), `/solicitudes` y `/personal` (F37), `/leer/[loanId]` (F28–F31).

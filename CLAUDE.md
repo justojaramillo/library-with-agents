@@ -11,7 +11,10 @@ Al empezar una sesión, recuérdale a la persona lo que siga abierto y pregunta 
 ### Decisiones de la persona
 - [ ] **Revisar las rutas** (`/`, `/login`, `/cuentas`, `/api/…`; la lista esperada está al final de `docs/features.md`). La persona dijo que las revisará ella.
 
-### Firebase y Vercel (ADR-0003)
+### Specs por aprobar
+- [ ] **`docs/specs/F0-base-del-proyecto.md`** (describe la capa compartida ya construida) y **`docs/specs/F33-navegacion-y-pantallas-base.md`** (barra de navegación con sesión; «Cuentas» solo para personal). F33 está sin implementar: al aprobarla, delegar con `feature-workflow`.
+
+### Firebase y Vercel (ADR-0003, ADR-0007)
 - [ ] La persona ya ejecutó `npm run seed -- --yes` (los agentes no lo ejecutan). Falta que pruebe el ingreso en local y confirme que publicó `firestore.rules` y desactivó el registro desde el cliente.
 - [ ] La persona conecta el repositorio de GitHub (`justojaramillo/library-with-agents`, rama `main`) a Vercel, crea el store **privado** de Vercel Blob, agrega las variables de Firebase en el proyecto y despliega (README → «Configurar los servicios»). Blob se usará desde F27.
 
@@ -20,7 +23,7 @@ Al empezar una sesión, recuérdale a la persona lo que siga abierto y pregunta 
 - [ ] **Seguridad, mejoras que quedan** (informe del agente `security`): límite de tasa y caché del catálogo público (la búsqueda lee todo Firestore y puede agotar la cuota de Spark), cabeceras de seguridad (CSP, `X-Frame-Options`, `Referrer-Policy`) en `next.config.ts`, conciliar identidades huérfanas de Authentication (`email-already-exists` sin cuenta), paginar `GET /api/members`, y decidir si las cuentas de mostrador reciben un enlace de restablecimiento en vez de una contraseña elegida por el personal.
 - [ ] **Pruebas que faltan:** rutas HTTP (401/403 por rol y 400 con un rol no permitido), las pruebas del repositorio de Firestore y de las rutas HTTP (sin red real), y la re-validación en `register`/`provision` con roles inventados.
 - [ ] Decidir si el **correo con espacios** se recorta (el contrato lo recorta) o se rechaza.
-- [ ] Probar el proyecto copiado en un **directorio vacío** (docs + configuración de agentes) para comprobar que los agentes pueden construirlo desde las specs.
+- [ ] Hacer la **prueba real en un directorio vacío** siguiendo `docs/bootstrap.md` (única forma de saber dónde se atascan los agentes). Faltan además las specs de F5–F38 para el proyecto completo.
 
 ### Próximas features
 - [ ] Ola 1 de `docs/features.md`: escribir las specs F5–F8 (skill `write-spec`; ya están las respuestas de cupos, renovaciones y préstamo digital) y construirlas. La spec de F5 debe reemplazar `LOAN_RULES.maxActiveLoansPerMember` por `maxActiveLoansByRole` (3, 3, 5, igual para físicos y digitales pero contados por separado) y añadir `maxRenewalsByRole` (2, 2, 3). Después, cuentas (Ola 2) y lector (Ola 3).

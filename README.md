@@ -84,6 +84,7 @@ Abre el proyecto con `claude`. `CLAUDE.md` importa `AGENTS.md`; los subagentes s
 `.env*` (salvo `.env.example`), `data/`, `.git/` y `secrets/` están bloqueadas en tres capas: permisos del harness (`.claude/settings.json`, `opencode.json`), un hook/plugin que usa `.agents/guard/rules.ts` y `.gitignore`. Prueba pidiéndole a un agente que lea el `.env`. Es una barrera de buena fe, **no un sandbox**: un comodín en `bash` puede esquivarla (lo documenta `tests/project/guard.test.ts`). La defensa real es no tener secretos reales donde trabaja el agente.
 
 ## Documentación
+- `docs/bootstrap.md` — cómo construir el proyecto desde cero con los agentes (kit de archivos, orden, problemas conocidos).
 - `docs/features.md` — roles, reglas de negocio, lista de features y áreas.
 - `docs/architecture.md` — estructura, fronteras y patrones.
 - `docs/frontend-rules.md` — responsive, HTML semántico, paleta azul y blanco, WCAG 2.1 AA.
