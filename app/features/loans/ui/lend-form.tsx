@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useId, useRef, useState } from "react";
+// El orden importa, no lo reordenes: fija Zod sin compilación antes de cargar esquemas (CSP).
+import "@/shared/ui/client-setup";
 import type { Book } from "@/features/catalog/schema";
 import type { Member } from "@/features/accounts/schema";
 import { LoanSchema, type LendInput } from "../schema";

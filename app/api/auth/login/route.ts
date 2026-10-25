@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getContainer } from "@/features/container";
 import { SessionLoginInputSchema } from "@/features/accounts/schema";
 import { assertSameOrigin, handleError } from "@/shared/server/http";
+import { clientKey, enforceRateLimit } from "@/shared/server/security/rate-limit";
 import { SESSION_TTL_SECONDS, sessionCookieName, sessionCookieOptions } from "@/shared/server/security/session";
 
 /**
@@ -11,6 +12,7 @@ import { SESSION_TTL_SECONDS, sessionCookieName, sessionCookieOptions } from "@/
 export async function POST(req: NextRequest) {
   try {
     assertSameOrigin(req);
+    enforceRateLimit("login", clientKey(req), new Date());
     const input = SessionLoginInputSchema.parse(await req.json());
     const { member, sessionCookie } = await getContainer().auth.login(input);
     const res = NextResponse.json(member);

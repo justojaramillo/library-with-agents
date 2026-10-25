@@ -1,6 +1,6 @@
 # F10 · F16 · F17 · Autorregistro, recuperar contraseña y límite de intentos de ingreso
 
-- **Estado:** Borrador
+- **Estado:** Aprobada (la persona respondió las cuatro preguntas y pidió construir, 2026-10-26)
 - **Rol(es):** público (sin sesión)
 - **Contrato afectado:** `app/features/accounts/schema.ts` (`ForgotPasswordInputSchema`); `app/shared/server/security/rate-limit.ts` (dos cubos nuevos, `RATE_LIMITS`). `app/shared/schema.ts` no cambia.
 - **Depende de:** `docs/specs/F3-F4-roles-y-cuentas.md` (aprobada), `docs/specs/S1-endurecimiento-de-seguridad.md` y `docs/adr/0008-limite-de-tasa-y-cache-del-catalogo.md`.
@@ -18,7 +18,7 @@ Una persona sin cuenta puede crearse una cuenta de `EXTERNO` o `ESTUDIANTE` (F10
 
 ### F10 · Autorregistro
 1. **`POST /api/auth/register`** (pública) recibe `CreateMemberInput` (`name`, `email`, `password`, `role` opcional). `role` solo puede ser `EXTERNO` o `ESTUDIANTE`; ausente → `EXTERNO`; cualquier otro valor (`DOCENTE`, `BIBLIOTECARIO`, `ADMINISTRADOR`, vacío, mayúsculas distintas…) → **400** y no se crea nada. El rol nunca se toma de la sesión ni de otro campo.
-2. La cuenta queda **activa**, con el correo en minúsculas y recortado. Un correo ya registrado → **409** con el mensaje «Ya existe una cuenta con ese correo.» (decisión sobre qué revela, ver pregunta 3). Contraseña de 8 a 100 caracteres (contrato actual).
+2. La cuenta queda **activa**, con el correo en minúsculas y recortado. Un correo ya registrado → **409** con el mensaje «Ya existe una cuenta con ese correo.» (decisión sobre qué revela, ver pregunta 3). Contraseña de 8 a 100 caracteres (contrato actual). El correo admite hasta **254** caracteres (el máximo práctico); con 255 o más → 400 (en registro, en recuperación y en el ingreso).
 3. Respuesta **201** con el `Member` público (nunca contraseña ni `search_keys`). La ruta **no** crea sesión: la pantalla ingresa después con el SDK de cliente (regla 6).
 4. **Protección de la ruta:** `assertSameOrigin` primero; luego límite de tasa por IP (cubo `register`: 10 por hora, `clientKey`; sin IP válida no se limita, como en S1); luego la validación. Sin sesión requerida; si el visitante ya tiene sesión, la ruta funciona igual (no la cambia).
 5. **Atomicidad y limpieza:** la creación en Firebase Authentication y el documento `members/{uid}` siguen siendo los de `register` (si falla guardar el documento, se borra la identidad; si ese borrado falla, queda una identidad huérfana que `npm run reconcile:identities` informa).
@@ -96,8 +96,11 @@ Reparto sugerido: **backend** (rutas y límites; es pequeño) ∥ **frontend A**
 ## Fuera de alcance
 Verificación de la propiedad del correo (ver pregunta 1), solicitud del rol `DOCENTE` (F11–F12), creación de bibliotecarios (F13), desactivar cuentas (F14), cambiar la contraseña con sesión abierta (F15), formularios del personal para crear cuentas (F36), mover la verificación de contraseña al servidor (pregunta 2), personalizar el correo de Firebase desde código.
 
-## Preguntas abiertas
-1. **¿Verificación del correo al registrarse?** Hoy cualquiera puede crear una cuenta con un correo ajeno, porque nadie confirma que le pertenece. Con ella podría, por ejemplo, ocupar el correo de otra persona antes de que esa persona se registre, o (cuando existan las reservas, F25, y el préstamo a sí mismo por API de F5) apartar ejemplares con cuentas falsas (riesgo B5 del informe de F5–F8). Mi recomendación: **no exigir verificación ahora** (Firebase puede enviarla, pero obligarla añade un estado «sin verificar», pantallas y reglas de ingreso) y revisarla si se detecta abuso. ¿De acuerdo?
-2. **F17 con la limitación de Firebase.** Lo que hace la spec es: límite por IP en nuestro servidor (regla 14), mensaje claro cuando Firebase bloquea (regla 15) y nada más, porque el conteo de intentos fallidos ocurre en Firebase. Si quieres un bloqueo propio (p. ej., 5 fallos → cuenta bloqueada 15 min), habría que verificar la contraseña en el servidor con la API REST de Firebase, lo que cambia ADR-0003 y F4. Mi recomendación: aceptar el bloqueo de Firebase. ¿Lo aceptas?
-3. **Mensaje al registrar un correo ya existente.** La spec dice «Ya existe una cuenta con ese correo.» (409), que revela qué correos están registrados (lo mitiga el límite de 10 registros por hora y IP). La alternativa —un mensaje genérico— mejora la privacidad pero confunde a quien olvidó que ya tenía cuenta (y no evita la enumeración si el servidor sigue respondiendo 409). Mi recomendación: mostrar el mensaje claro. ¿De acuerdo?
-4. **Cuentas creadas en el mostrador (F3/F36).** F16 permite que esa persona restablezca su contraseña con «¿Olvidaste tu contraseña?». ¿Quieres que, en F36, el formulario del personal pueda **no pedir** contraseña (se genera una aleatoria) y la persona reciba un correo de restablecimiento al crearse la cuenta? Es solo para decidir el diseño de F36; no afecta a esta spec.
+## Preguntas abiertas (resueltas)
+1. **Verificación del correo:** no se exige por ahora.
+2. **F17:** se acepta el bloqueo de Firebase (reglas 14–17).
+3. **Correo ya registrado:** se muestra «Ya existe una cuenta con ese correo.» (regla 2).
+4. **Cuentas de mostrador (F36):** el formulario del personal **pide contraseña** (como hoy en F3) y la persona puede restablecerla con «¿Olvidaste tu contraseña?» (F16). No hay envío automático de enlace.
+
+## Enmienda: aviso de la CSP por Zod en el navegador
+Zod 4 comprueba al cargar si puede compilar código (`Function("")`) para su modo rápido; la CSP de producción lo bloquea (sin `'unsafe-eval'`), Zod lo captura y sigue, pero el navegador registra «blocked a JavaScript eval». Se resuelve **sin tocar la CSP**: un componente de cliente `app/shared/ui/client-setup.tsx` (fija `z.config({ jitless: true })` al cargar, no renderiza nada) montado en `app/layout.tsx`, de modo que ningún Zod del navegador intente compilar código. Regla de orden: ningún import del proyecto ni de `zod` puede evaluarse antes de `@/shared/ui/client-setup` (o de `./auth-client`, que lo importa primero) en los módulos que llega a ejecutar el navegador; los paquetes de terceros (`firebase/*`, `next/*`) sí pueden ir antes. Una prueba de proyecto lo vigila. Criterio: en producción, abrir `/login`, `/registro`, `/recuperar` y `/prestamos` no registra ninguna violación de `script-src`/eval en la consola. (Prueba: tras importar el módulo, `z.config().jitless === true`.)

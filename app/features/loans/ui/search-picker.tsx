@@ -1,6 +1,8 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
+// El orden importa, no lo reordenes: fija Zod sin compilación antes de cargar esquemas (CSP).
+import "@/shared/ui/client-setup";
 import type { z } from "zod";
 import { readErrorMessage } from "./api-client";
 

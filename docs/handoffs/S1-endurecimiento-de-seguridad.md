@@ -1,6 +1,6 @@
 ## Entrega: orquestador · S1 (endurecimiento de seguridad)
 **Hecho:**
-- **Error de prerender (`blocking-prerender-current-time`):** `await connection()` antes de leer la sesión en `session-nav`, `/cuentas`, `/prestamos`, `/mis-prestamos` y `/mis-vencidos`; y en `CatalogContent` de `/` (`blocking-prerender-random`). Una prueba de proyecto (`tests/project/session-connection.test.ts`) falla si algo lee la sesión sin `connection()`. Confirmado por la persona en el navegador.
+- **Error de prerender (`blocking-prerender-current-time`):** `await connection()` antes de leer la sesión en `session-nav`, `/cuentas`, `/prestamos`, `/mis-prestamos` y `/mis-vencidos`; y en `CatalogContent` de `/` (`blocking-prerender-random`). Una prueba de proyecto (`tests/project/session-connection.test.ts`) falla si algo lee la sesión sin `connection()`.
 - **Contenedor en desarrollo:** se reconstruye si cambia la versión del módulo (antes, `next dev` conservaba servicios viejos tras un cambio).
 - **Registro de errores:** los 500 registran nombre, código y mensaje recortado (nunca el objeto completo); un documento corrupto de préstamos, cuentas o libros da 500 «Error interno», no 400.
 - **Cabeceras y CSP** en `next.config.ts` (CSP solo en producción); `connect-src` con `identitytoolkit` y `securetoken`.

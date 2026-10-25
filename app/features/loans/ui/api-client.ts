@@ -1,3 +1,5 @@
+// El orden importa, no lo reordenes: fija Zod sin compilación antes de cargar esquemas (CSP).
+import "@/shared/ui/client-setup";
 import { ApiErrorSchema } from "@/shared/schema";
 
 export const SESSION_EXPIRED_MESSAGE = "Tu sesión expiró. Ingresa de nuevo.";

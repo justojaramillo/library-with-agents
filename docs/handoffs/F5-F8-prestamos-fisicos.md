@@ -12,10 +12,7 @@
 
 **Cómo verificar:** `npm run check:full` → 568 pruebas en verde y build con las tres rutas nuevas.
 
-**Decisiones:**
-- Una persona no puede tener dos ejemplares activos del mismo libro (`ConflictError`).
-- Hasta F26 la multa solo se informa al devolver; antes de F26 solo bloquean los préstamos vencidos (decisión de la persona).
-- Un prestatario puede prestarse a sí mismo (regla de `docs/features.md`).
+**Decisiones:** las decisiones de la persona constan solo en `docs/specs/F5-F8-prestamos-fisicos.md` (sección «Preguntas abiertas (resueltas)» y encabezado de estado); aquí no se repiten.
 
 **Pendiente / bloqueos:**
 - Pruebas de atomicidad contra el emulador de Firestore (hoy solo en memoria).

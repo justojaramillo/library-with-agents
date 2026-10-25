@@ -6,7 +6,7 @@
 - Búsqueda de personas: `GET /api/members?q=&limit=&lendable=` (solo personal), con `search_keys` en Firestore (máx. 200 documentos por búsqueda). `limit` en `GET /api/books`. Lectura por lote: `getMany` y `getSummaries` (sin disponibilidad).
 - Fechas en la hora local del navegador (`LocalDate`: HTML inicial en `America/Bogota`, luego la zona del navegador).
 - Script `npm run backfill:members` (con `--yes`, `--limit=N`, aviso de emulador, espera de 5 s).
-- Error de desarrollo `randomBytes` en `/` (`partialPrefetching`): `await connection()` en `CatalogContent`; confirmado por la persona en el navegador.
+- Error de desarrollo `randomBytes` en `/` (`partialPrefetching`): `await connection()` en `CatalogContent`.
 - Revisión de `security`: sin críticos ni altos; M1 (lecturas de más en `/prestamos`), B2 (pares sustitutos), B5 (script), B6 y B7 corregidos.
 
 **Archivos:**
@@ -17,10 +17,7 @@
 
 **Cómo verificar:** `npm run check:full` → 894 pruebas en verde y build con `/prestamos`, `/mis-prestamos` y `/mis-vencidos`.
 
-**Decisiones:**
-- El libro físico se presta en el mostrador; la reserva desde el catálogo será otra spec (F25).
-- Se identifica a la persona por nombre o correo; cédula o código estudiantil, después.
-- Props de componentes en camelCase; `LoanRow` en snake_case porque refleja el cable.
+**Decisiones:** las decisiones de la persona constan solo en `docs/specs/F34-F35-pantallas-de-prestamos.md` (sección «Preguntas abiertas (resueltas)» y encabezado de estado); aquí no se repiten.
 
 **Pendiente / bloqueos:**
 - **La persona debe ejecutar `npm run backfill:members -- --yes` sobre su Firebase** (primero sin `--yes`). Con muchas cuentas, usar `--limit=N` por tandas dentro de la cuota de Spark (20 000 escrituras al día).

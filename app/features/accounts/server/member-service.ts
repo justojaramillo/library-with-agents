@@ -68,7 +68,7 @@ async function rollbackIdentity(identity: IdentityProvider, uid: string): Promis
 /** Lógica común de `register` y `provision`: correo único, un solo ADMINISTRADOR, identidad en Firebase, cuenta activa. */
 async function createAccount(deps: MemberServiceDeps, input: ProvisionMemberInput): Promise<Member> {
   if (await deps.members.findByEmail(input.email)) {
-    throw new ConflictError("Ese correo ya está registrado");
+    throw new ConflictError("Ya existe una cuenta con ese correo.");
   }
   if (input.role === "ADMINISTRADOR" && (await deps.members.existsWithRole("ADMINISTRADOR"))) {
     throw new ConflictError("Ya existe un administrador; solo puede haber uno");

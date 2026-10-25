@@ -5,6 +5,8 @@ import { TooManyRequestsError } from "../errors";
 export const RATE_LIMITS = {
   catalogSearch: { limit: 60, windowMs: 60_000 },
   memberSearch: { limit: 30, windowMs: 60_000 },
+  register: { limit: 10, windowMs: 3_600_000 },
+  login: { limit: 30, windowMs: 60_000 },
 };
 
 type Window = { count: number; resetAt: number };
@@ -21,7 +23,10 @@ const MAX_ENTRIES = 10_000;
 /** Longitud máxima de una IP aceptada como clave. */
 const MAX_KEY_LENGTH = 64;
 
-/** El barrido de vencidas ocurre como máximo una vez por ventana (la menor de los cubos). */
+/**
+ * El barrido de vencidas ocurre como máximo una vez por ventana (la menor de los cubos). Es seguro con ventanas
+ * largas: el barrido solo borra entradas cuyo `resetAt` ya pasó, así que una clave de `register` vive su hora completa.
+ */
 const SWEEP_INTERVAL_MS = Math.min(...Object.values(RATE_LIMITS).map((rule) => rule.windowMs));
 
 /** Instante (ms) del último barrido de vencidas. */

@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useRef, useState, type ReactNode } from "react";
+// El orden importa, no lo reordenes: fija Zod sin compilación antes de cargar esquemas (CSP).
+import "@/shared/ui/client-setup";
 import { ReturnResultSchema } from "../schema";
 import { readErrorMessage } from "./api-client";
 import { formatCop } from "./format";

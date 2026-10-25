@@ -3,7 +3,7 @@ import { IdSchema, RoleSchema, SelectableRoleSchema } from "@/shared/schema";
 
 /** F4 · Ingreso con correo y contraseña — entrada. */
 export const LoginInputSchema = z.object({
-  email: z.string().trim().toLowerCase().pipe(z.email()),
+  email: z.string().trim().toLowerCase().max(254).pipe(z.email()),
   password: z.string().min(1).max(100),
 });
 export type LoginInput = z.infer<typeof LoginInputSchema>;
@@ -19,7 +19,7 @@ export type SessionLoginInput = z.infer<typeof SessionLoginInputSchema>;
 
 const MemberBaseSchema = z.object({
   name: z.string().trim().min(1).max(120),
-  email: z.string().trim().toLowerCase().pipe(z.email()),
+  email: z.string().trim().toLowerCase().max(254).pipe(z.email()),
   password: z.string().min(8).max(100),
 });
 
@@ -87,3 +87,9 @@ export const MemberPageSchema = z.object({
   next_after: IdSchema.nullable(),
 });
 export type MemberPage = z.infer<typeof MemberPageSchema>;
+
+/** F16 · Recuperar la contraseña — entrada. Solo se valida en el navegador: el envío lo hace el SDK de cliente de Firebase. */
+export const ForgotPasswordInputSchema = z.object({
+  email: z.string().trim().toLowerCase().max(254).pipe(z.email()),
+});
+export type ForgotPasswordInput = z.infer<typeof ForgotPasswordInputSchema>;

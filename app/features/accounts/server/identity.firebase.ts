@@ -7,7 +7,7 @@ import type { IdentityProvider } from "./identity";
 function rethrowAsConflict<T>(error: T): never {
   if (typeof error === "object" && error !== null && "code" in error) {
     if (error.code === "auth/email-already-exists") {
-      throw new ConflictError("Ese correo ya está registrado");
+      throw new ConflictError("Ya existe una cuenta con ese correo.");
     }
   }
   throw error;

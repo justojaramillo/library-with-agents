@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { NavBarFallback } from "@/features/accounts/ui/nav-bar";
+import { ClientSetup } from "@/shared/ui/client-setup";
 import { SessionNav } from "./session-nav";
 import "./globals.css";
 
@@ -13,6 +14,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="es">
       <body className="flex min-h-screen flex-col bg-surface text-ink">
+        <ClientSetup />
         <a href="#contenido" className="skip-link">
           Saltar al contenido
         </a>

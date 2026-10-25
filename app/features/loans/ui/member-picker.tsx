@@ -1,5 +1,7 @@
 "use client";
 
+// El orden importa, no lo reordenes: fija Zod sin compilación antes de cargar esquemas (CSP).
+import "@/shared/ui/client-setup";
 import { z } from "zod";
 import { MemberSchema, type Member } from "@/features/accounts/schema";
 import { ROLE_LABELS } from "@/features/accounts/ui/role-labels";

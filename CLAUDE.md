@@ -6,7 +6,7 @@
 - Los servidores MCP (`context7`, `next-devtools`) están declarados en `.mcp.json` y habilitados en `.claude/settings.json`.
 
 ## Dónde quedamos (2026-10-26)
-**Construido, desplegado en Vercel y probado por la persona:** F0 (capa compartida), F1–F2 (catálogo), F3–F4 (cuentas, cinco roles, ingreso con Firebase, administrador único), F33 (barra de navegación con sesión; «Cuentas» solo para personal). `npm run check:full` en verde (1246 pruebas). Repositorio: `justojaramillo/library-with-agents`, rama `main`, último commit de código `0945202`. La persona confirmó que en móvil (360 px) se ve bien y que la barra muestra la sesión.
+**Construido, desplegado en Vercel y probado por la persona:** F0 (capa compartida), F1–F2 (catálogo), F3–F4 (cuentas, cinco roles, ingreso con Firebase, administrador único), F33 (barra de navegación con sesión; «Cuentas» solo para personal). `npm run check:full` en verde (1452 pruebas). Repositorio: `justojaramillo/library-with-agents`, rama `main`, último commit de código `0945202`. La persona confirmó que en móvil (360 px) se ve bien y que la barra muestra la sesión.
 
 **Cómo trabajamos (FDD, `feature-workflow`):** spec en `docs/specs/` → la persona la aprueba → contrato (`schema.ts`, solo el orquestador) → delegar en paralelo por zonas (backend, frontend, tests; varios agentes del mismo tipo si tocan archivos distintos) → integrar con `npm run check:full` → `security` en solo lectura → nota en `docs/handoffs/` → commit y push → la persona prueba en Vercel. Para reconstruir desde cero: `docs/bootstrap.md` (la prueba en carpeta vacía ya llegó hasta F33 con los docs corregidos).
 
@@ -18,9 +18,11 @@
 
 **Vercel Blob está conectado** (store privado; `npm run check:env` valida `BLOB_READ_WRITE_TOKEN`; la persona tiene además el id del store en su archivo de entorno, que el código aún no declara: decidirlo en F27, ver ADR-0003). Los agentes no leen el archivo de entorno: el estado se comprueba con `npm run check:env`.
 
-**Regla de orden (decisión de la persona, 2026-10-26):** se construye **en orden de olas** (Ola 2 → 3 → 4 → 5); solo se adelanta lo **estrictamente necesario** para la feature en curso (p. ej. una pieza de F26 si F24 la exige). F24 y F26 siguen en la Ola 4.
+**Orden de construcción:** por olas (Ola 2 → 3 → 4 → 5, `docs/features.md`); solo se adelanta lo estrictamente necesario para la feature en curso (p. ej. una pieza de F26 si F24 la exige).
 
-**Siguiente paso:** la spec de F10 + F16 + F17 (`docs/specs/F10-F16-F17-autoservicio-de-cuentas.md`) está en **Borrador**, esperando la aprobación de la persona (4 preguntas abiertas). Ola 2, en orden: F10 (autorregistro) con F16 (recuperar contraseña) y F17 (límite de intentos de ingreso); luego F11–F12 (solicitud de docente), F13–F14 (bibliotecarios, desactivar), F15 (cambiar contraseña) y F36–F37 (pantallas). Escribir cada spec con `write-spec` y esperar su aprobación. Todo lo anterior (F5–F8, F34–F35, S1) ya está en `main` (push hecho el 2026-10-26).
+**F10 + F16 + F17 (autorregistro, recuperar contraseña, límite de intentos) construido** (spec `docs/specs/F10-F16-F17-autoservicio-de-cuentas.md`, nota en `docs/handoffs/F10-F16-F17-autoservicio-de-cuentas.md`; `check:full` en verde, 1452 pruebas, `security` sin críticos ni altos). Incluye el arreglo del aviso de eval de la CSP (Zod `jitless` vía `client-setup`). **Aún sin push** (commit local).
+
+**Siguiente paso:** seguir la Ola 2 en orden: F11–F12 (solicitud de docente y su aprobación), F13–F14 (bibliotecarios, desactivar cuentas), F15 (cambiar contraseña) y F36–F37 (pantallas). Escribir cada spec con `write-spec` y esperar su aprobación. Antes de F11–F12, reabrir la **verificación del correo** (informe de `security` de F10: el correo no verificado permite ocupar el de otra persona). F5–F8, F34–F35 y S1 ya están en `main`.
 
 ## Pendientes del proyecto (borra cada uno al cerrarlo; si surge uno nuevo, añádelo aquí)
 Al empezar una sesión, recuérdale a la persona lo que siga abierto y pregunta por dónde quiere seguir.
@@ -31,6 +33,7 @@ Al empezar una sesión, recuérdale a la persona lo que siga abierto y pregunta 
 
 ### Firebase y Vercel (ADR-0003, ADR-0007)
 - [ ] Confirmar en la consola de Firebase que `firestore.rules` está publicada y que el registro desde el cliente está desactivado.
+- [ ] **Consola de Firebase (F10):** confirmar «Email enumeration protection» y si «Enable create (sign-up)» puede desactivarse (el registro directo contra la API evita nuestro límite); revisar la plantilla «Restablecer contraseña» en español y los dominios autorizados. Después de desplegar F10: probar `/registro` (ingreso automático) y `/recuperar`, y que la consola del navegador no muestre el aviso de eval de la CSP.
 - [ ] Tras desplegar: probar el **ingreso con la CSP activa** (idealmente también en un móvil o Safari; si falla, mirar la consola del navegador y `connect-src` en `next.config.ts`) y **medir la caché del catálogo** (contar las lecturas de Firestore con dos búsquedas iguales; ADR-0008, «Limitaciones conocidas»).
 
 ### Verificación y calidad
@@ -40,6 +43,7 @@ Al empezar una sesión, recuérdale a la persona lo que siga abierto y pregunta 
 - [ ] **Pruebas que faltan:** rutas HTTP (401/403 por rol, 400 con un rol no permitido, logout desde otro origen), repositorios de Firestore y la re-validación en `register`/`provision` con roles inventados. De F33: `readNavUser` (inactiva/inexistente → sin sesión) y que el HTML estático de `/` no contenga «Ingresar» ni «Cerrar sesión» tras el build; decidir si se filtran caracteres Unicode de control en el nombre.
 - [ ] Repetir la **prueba de reconstrucción en una carpeta vacía** (`docs/bootstrap.md`) cuando haya más features, para ver si los docs siguen siendo suficientes.
 
+- [ ] **Semilla para estudiantes — las specs no deben viajar** (revisión del 2026-10-26): hoy `docs/bootstrap.md` §2 copia `docs/` completo (incluye `docs/specs/` aprobadas y `docs/handoffs/`) y §3 manda empezar por la spec F0 ya escrita; la fila de F0 de `docs/features.md` solo apunta a esa spec. Para que el estudiante escriba y apruebe cada spec: en el kit dejar solo `docs/specs/_template.md` y `docs/handoffs/_plantilla.md`, cambiar el primer mensaje a «escribe la spec de F0 con `write-spec`», describir F0 dentro de `features.md`, y decidir qué hacer con los ADR (todos «Aceptada»), los contratos `schema.ts` (fijan plazos, cupos y roles) y las reglas de negocio de `features.md`, que también son decisiones ya tomadas.
 - [ ] **Semilla autónoma** (análisis del 2026-10-26): armar un kit/script que copie la lista completa de `docs/bootstrap.md §2` con un `CLAUDE.md` semilla (sin «Dónde quedamos») y `docs/handoffs/` solo con la plantilla; añadir `docs/build-plan.md` con el orden, el criterio de parada y el primer mensaje; hacer la spec F5–F8 autosuficiente (puertos completos de `LoanRepository`, `BookLookup`, `MemberLookup`, `FineStrategy`; `markReturned` atómico → `ConflictError`; `IdSchema` ≤ 128 sin «/»); regla en `feature-workflow`: todo hallazgo de `security` que cambie el comportamiento entra en la spec en el mismo commit; actualizar la tabla de `bootstrap.md` (paso 5); la prueba en carpeta vacía debe usar **otro proyecto de Firebase**.
 
 - [ ] **De F34–F35 (`docs/handoffs/F34-F35-pantallas-de-prestamos.md`):** ejecutar `backfill:members` en el Firebase real; revisión visual de las tres pantallas a 360/768/1024 px y de la paginación de `/cuentas`; paginar `/prestamos`; recalcular `search_keys` al editar nombre o correo (F13 o similar); pruebas de navegador para lo interactivo.

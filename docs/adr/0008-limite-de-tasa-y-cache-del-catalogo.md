@@ -2,7 +2,7 @@
 
 - **Estado:** Aceptada
 - **Fecha:** 2026-10-26
-- **Quién decide:** la persona (pidió corregir los pendientes de seguridad)
+- **Quién decide:** persona (no el agente); la aprobación consta en `docs/specs/S1-endurecimiento-de-seguridad.md`
 
 ## Contexto
 La búsqueda pública de libros lee toda la colección `books` en cada petición y la búsqueda de personas lee hasta 200 documentos. El plan Spark de Firebase permite 50 000 lecturas y 20 000 escrituras al día en todo el proyecto: un script (o una sesión robada) podría agotarlas y dejar la app sin servicio. No hay Redis ni otro almacén compartido, y las dependencias nuevas exigen un ADR (regla 6).

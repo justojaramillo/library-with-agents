@@ -1,5 +1,7 @@
 "use client";
 
+// El orden importa, no lo reordenes: fija Zod sin compilación antes de cargar esquemas (CSP).
+import "@/shared/ui/client-setup";
 import { z } from "zod";
 import { BookSchema, type Book } from "@/features/catalog/schema";
 import { SearchPicker, SUGGESTION_LIMIT } from "./search-picker";

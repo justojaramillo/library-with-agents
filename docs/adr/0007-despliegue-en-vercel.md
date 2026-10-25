@@ -14,7 +14,7 @@ La aplicación se publica en Vercel (plan Hobby, uso no comercial) desde la rama
 - **Scripts de Node fuera de Next** (`seed`): se ejecutan con `tsx --conditions=react-server`, porque importan módulos con `import "server-only"`.
 - **Variables de entorno:** las mismas de `.env.example` se crean en *Settings → Environment Variables* de Vercel, marcadas para Production; las `NEXT_PUBLIC_*` se leen al compilar, así que un cambio exige volver a desplegar. `FIREBASE_PRIVATE_KEY` se acepta con comillas envolventes y con `\n` literales (`normalizePrivateKey`).
 - **Cookie de sesión:** `__Host-session` en producción (exige `Secure`, `Path=/` y sin `Domain`); `session` en desarrollo.
-- **Vercel Blob** (store privado): **conectado al proyecto** (confirmado por la persona el 2026-10-26; `npm run check:env` marca `BLOB_READ_WRITE_TOKEN` como válido, con el prefijo `vercel_blob_rw_`). Se usará desde F27; el acceso es por OIDC dentro de Vercel y por `BLOB_READ_WRITE_TOKEN` en local.
+- **Vercel Blob** (store privado): **conectado al proyecto** (2026-10-26; `npm run check:env` marca `BLOB_READ_WRITE_TOKEN` como válido, con el prefijo `vercel_blob_rw_`). Se usará desde F27; el acceso es por OIDC dentro de Vercel y por `BLOB_READ_WRITE_TOKEN` en local.
 - **Diagnóstico:** cuando una configuración de Firebase falla, la app registra en el log un informe con ✓/✗ por variable (`EnvChecker`), nunca los valores.
 
 ## Consecuencias

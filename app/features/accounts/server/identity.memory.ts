@@ -21,7 +21,7 @@ class MemoryIdentity implements MemoryIdentityProvider {
     const normalized = email.toLowerCase();
     for (const user of this.users.values()) {
       if (user.email === normalized) {
-        throw new ConflictError("Ese correo ya está registrado");
+        throw new ConflictError("Ya existe una cuenta con ese correo.");
       }
     }
     this.counter += 1;
