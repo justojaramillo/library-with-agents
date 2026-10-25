@@ -2,7 +2,7 @@ import "server-only";
 import { cert, getApps, initializeApp, type App } from "firebase-admin/app";
 import { getAuth, type Auth } from "firebase-admin/auth";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";
-import { EnvChecker, EnvSchema } from "./env";
+import { EnvChecker, EnvSchema, normalizePrivateKey } from "./env";
 
 export { COLLECTIONS } from "./collections";
 
@@ -33,8 +33,8 @@ function getAdminApp(): App {
     credential: cert({
       projectId: env.FIREBASE_PROJECT_ID,
       clientEmail: env.FIREBASE_CLIENT_EMAIL,
-      // En el archivo de entorno la clave lleva `\n` literales: se vuelven saltos de línea reales.
-      privateKey: env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+      // Sin comillas envolventes y con los `\n` literales convertidos en saltos de línea reales.
+      privateKey: normalizePrivateKey(env.FIREBASE_PRIVATE_KEY),
     }),
   });
 }

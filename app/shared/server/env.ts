@@ -29,8 +29,14 @@ const ISSUE_MESSAGES: Record<string, string> = {
 
 const NAMES = Object.keys(EnvSchema.shape);
 
-function readableKey(raw: string): string {
-  return raw.replace(/\\n/g, "\n");
+/**
+ * Clave privada tal como la necesita el SDK: sin comillas que la envuelvan (error habitual al pegarla en el panel
+ * de Vercel) y con los `\n` literales convertidos en saltos de línea reales.
+ */
+export function normalizePrivateKey(raw: string): string {
+  const trimmed = raw.trim();
+  const unquoted = trimmed.replace(/^(["'])([\s\S]*)\1$/, "$2");
+  return unquoted.replace(/\\n/g, "\n");
 }
 
 export class EnvChecker {
@@ -62,7 +68,7 @@ export class EnvChecker {
     if (project && email && !email.endsWith(`@${project}.iam.gserviceaccount.com`)) {
       add("FIREBASE_CLIENT_EMAIL", "FORMATO (no es la cuenta de servicio de este proyecto)");
     }
-    const key = readableKey(get("FIREBASE_PRIVATE_KEY"));
+    const key = normalizePrivateKey(get("FIREBASE_PRIVATE_KEY"));
     if (key && !(key.includes("-----BEGIN PRIVATE KEY-----") && key.includes("-----END PRIVATE KEY-----"))) {
       add("FIREBASE_PRIVATE_KEY", "FORMATO (no parece una clave PEM; revisa las comillas dobles y los \\n)");
     }
