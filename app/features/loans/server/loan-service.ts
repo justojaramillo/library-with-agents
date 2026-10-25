@@ -2,7 +2,7 @@ import { BORROWER_ROLES, STAFF_ROLES } from "@/shared/schema";
 import type { BorrowerRole, Id, Role } from "@/shared/schema";
 import { ConflictError, ForbiddenError, NotFoundError } from "@/shared/server/errors";
 import { LOAN_RULES } from "../schema";
-import type { Actor, LendInput, Loan, LoanServicePort, OverdueLoan, ReturnResult } from "../schema";
+import type { ActiveLoan, Actor, LendInput, Loan, LoanServicePort, OverdueLoan, ReturnResult } from "../schema";
 import { computeDaysLate } from "./fine-strategy";
 import type { FineStrategy } from "./fine-strategy";
 import type { BookLookup, LoanRepository, MemberLookup } from "./repository";
@@ -105,19 +105,31 @@ async function returnLoan(deps: LoanServiceDeps, loanId: Id, actor: Actor, now: 
   return { loan: returned, fine_cop: deps.fine.calculate(daysLate) };
 }
 
-async function listOverdue(deps: LoanServiceDeps, memberId: Id, actor: Actor, now: Date): Promise<OverdueLoan[]> {
+function toActiveLoan(deps: LoanServiceDeps, loan: Loan, now: Date): ActiveLoan {
+  const daysLate = computeDaysLate(loan.due_at, now);
+  return { loan, days_late: daysLate, fine_cop: deps.fine.calculate(daysLate) };
+}
+
+async function listActiveByMember(deps: LoanServiceDeps, memberId: Id, actor: Actor, now: Date): Promise<ActiveLoan[]> {
   assertCanActOn(actor, memberId);
   if (!(await deps.members.findById(memberId))) {
     throw new NotFoundError("La cuenta no existe");
   }
   const active = await deps.loans.listActiveByMember(memberId);
-  return active
-    .filter((loan) => isOverdue(loan, now))
-    .sort((a, b) => Date.parse(a.due_at) - Date.parse(b.due_at))
-    .map((loan) => {
-      const daysLate = computeDaysLate(loan.due_at, now);
-      return { loan, days_late: daysLate, fine_cop: deps.fine.calculate(daysLate) };
-    });
+  return active.map((loan) => toActiveLoan(deps, loan, now));
+}
+
+async function listActive(deps: LoanServiceDeps, actor: Actor, now: Date): Promise<ActiveLoan[]> {
+  if (!isStaffRole(actor.role)) {
+    throw new ForbiddenError("Solo el personal de la biblioteca puede ver todos los préstamos activos");
+  }
+  const active = await deps.loans.listActive();
+  return active.map((loan) => toActiveLoan(deps, loan, now));
+}
+
+async function listOverdue(deps: LoanServiceDeps, memberId: Id, actor: Actor, now: Date): Promise<OverdueLoan[]> {
+  const active = await listActiveByMember(deps, memberId, actor, now);
+  return active.filter((item) => isOverdue(item.loan, now));
 }
 
 /** F5, F6 y F8 · Servicio de préstamos de libros físicos. Las reglas viven solo aquí (spec F5-F8). */
@@ -126,5 +138,7 @@ export function createLoanService(deps: LoanServiceDeps): LoanServicePort {
     lend: (input, actor, now) => lend(deps, input, actor, now),
     returnLoan: (loanId, actor, now) => returnLoan(deps, loanId, actor, now),
     listOverdue: (memberId, actor, now) => listOverdue(deps, memberId, actor, now),
+    listActive: (actor, now) => listActive(deps, actor, now),
+    listActiveByMember: (memberId, actor, now) => listActiveByMember(deps, memberId, actor, now),
   };
 }

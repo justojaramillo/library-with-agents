@@ -1,9 +1,12 @@
+import { z } from "zod";
+import { IdSchema, type Id } from "@/shared/schema";
 import { ConflictError } from "@/shared/server/errors";
 import {
   CreateMemberInputSchema,
   ProvisionMemberInputSchema,
   type CreateMemberInput,
   type Member,
+  type SearchMembersQuery,
   type ProvisionMemberInput,
 } from "../schema";
 import type { IdentityProvider } from "./identity";
@@ -25,7 +28,15 @@ export type MemberService = {
   /** La cuenta pública con ese id (uid), o `undefined` si no existe. */
   get(id: string): Promise<Member | undefined>;
   list(): Promise<Member[]>;
+  /** B1–B4 · Búsqueda de personas por nombre o correo (la consulta ya viene validada con `SearchMembersQuerySchema`). */
+  search(query: SearchMembersQuery): Promise<Member[]>;
+  /** Lectura por lote (F34–F35): las cuentas públicas con esos ids, en el orden recibido. Sin repetidos ni inexistentes; máximo 500 ids (si no, error de validación → 400). */
+  getMany(ids: Id[]): Promise<Member[]>;
 };
+
+/** Tope de ids por llamada (el máximo de `getAll` en Firestore). */
+const MAX_BATCH_IDS = 500;
+const BatchIdsSchema = z.array(IdSchema).max(MAX_BATCH_IDS);
 
 /** Alta con cualquier rol. Solo para scripts (seed) y servicios que ya validaron al actor; ninguna ruta lo recibe. */
 export type MemberAdminService = {
@@ -78,6 +89,16 @@ export function createMemberService(deps: MemberServiceDeps): MemberService & Me
     },
     async list() {
       return (await deps.members.list()).map(toPublicMember);
+    },
+    async search(query) {
+      const found = await deps.members.search(query.q, query.limit, query.lendable);
+      return found.map(toPublicMember);
+    },
+    async getMany(ids) {
+      const unique = [...new Set(BatchIdsSchema.parse(ids))];
+      const records = await deps.members.findByIds(unique);
+      const byId = new Map(records.map((record) => [record.id, toPublicMember(record)]));
+      return unique.flatMap((id) => byId.get(id) ?? []);
     },
   };
 }

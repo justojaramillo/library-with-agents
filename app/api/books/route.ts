@@ -3,11 +3,15 @@ import { getContainer } from "@/features/container";
 import { CreateBookInputSchema, SearchBooksQuerySchema } from "@/features/catalog/schema";
 import { assertSameOrigin, handleError, requireStaff } from "@/shared/server/http";
 
-/** F2 · GET /api/books?q=texto — público. */
+/** F2 · GET /api/books?q=texto&limit=n — público. `limit` (1–50) es opcional. */
 export async function GET(req: NextRequest) {
   try {
-    const { q } = SearchBooksQuerySchema.parse({ q: req.nextUrl.searchParams.get("q") ?? "" });
-    return NextResponse.json(await getContainer().books.search(q));
+    const params = req.nextUrl.searchParams;
+    const { q, limit } = SearchBooksQuerySchema.parse({
+      q: params.get("q") ?? "",
+      limit: params.get("limit") ?? undefined,
+    });
+    return NextResponse.json(await getContainer().books.search(q, limit));
   } catch (error) {
     return handleError(error);
   }

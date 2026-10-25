@@ -38,6 +38,15 @@ describe("Barra de navegación · visitante sin sesión", () => {
     expect(html).not.toContain("Cuentas");
   });
 
+  it("no muestra ningún enlace de préstamos (regla 14 de F34–F35)", () => {
+    expect(html).not.toContain("Préstamos");
+    expect(html).not.toContain("Mis préstamos");
+    expect(html).not.toContain("Mis vencidos");
+    expect(html).not.toContain('href="/prestamos"');
+    expect(html).not.toContain('href="/mis-prestamos"');
+    expect(html).not.toContain('href="/mis-vencidos"');
+  });
+
   it("no muestra «Cerrar sesión» ni ningún rol", () => {
     expect(html).not.toContain("Cerrar sesión");
     for (const label of Object.values(ROLE_LABELS)) {
@@ -93,6 +102,25 @@ describe("Barra de navegación · rol sin permiso de personal con sesión", () =
       it("no enlaza a /cuentas", () => {
         expect(html).not.toContain('href="/cuentas"');
       });
+
+      it("muestra «Mis préstamos» a /mis-prestamos y «Mis vencidos» a /mis-vencidos", () => {
+        expect(hasLink(html, "/mis-prestamos", "Mis préstamos")).toBe(true);
+        expect(hasLink(html, "/mis-vencidos", "Mis vencidos")).toBe(true);
+      });
+
+      it("no muestra «Préstamos» del personal ni enlaza a /prestamos", () => {
+        expect(html).not.toContain('href="/prestamos"');
+        expect(html).not.toContain(">Préstamos<");
+      });
+
+      it("ordena los enlaces: Biblioteca · Mis préstamos · Mis vencidos", () => {
+        const home = html.indexOf('href="/"');
+        const loans = html.indexOf('href="/mis-prestamos"');
+        const overdue = html.indexOf('href="/mis-vencidos"');
+        expect(home).toBeGreaterThanOrEqual(0);
+        expect(home).toBeLessThan(loans);
+        expect(loans).toBeLessThan(overdue);
+      });
     });
   }
 
@@ -125,6 +153,26 @@ describe("Barra de navegación · personal con sesión", () => {
       it("conserva «Biblioteca» y no muestra «Ingresar»", () => {
         expect(hasLink(html, "/", "Biblioteca")).toBe(true);
         expect(html).not.toContain("Ingresar");
+      });
+
+      it("muestra además «Préstamos» enlazada a /prestamos", () => {
+        expect(hasLink(html, "/prestamos", "Préstamos")).toBe(true);
+      });
+
+      it("no muestra «Mis préstamos» ni «Mis vencidos»", () => {
+        expect(html).not.toContain("Mis préstamos");
+        expect(html).not.toContain("Mis vencidos");
+        expect(html).not.toContain('href="/mis-prestamos"');
+        expect(html).not.toContain('href="/mis-vencidos"');
+      });
+
+      it("ordena los enlaces: Biblioteca · Préstamos · Cuentas", () => {
+        const home = html.indexOf('href="/"');
+        const loans = html.indexOf('href="/prestamos"');
+        const accounts = html.indexOf('href="/cuentas"');
+        expect(home).toBeGreaterThanOrEqual(0);
+        expect(home).toBeLessThan(loans);
+        expect(loans).toBeLessThan(accounts);
       });
     });
   }

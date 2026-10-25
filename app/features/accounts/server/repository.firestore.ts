@@ -2,6 +2,7 @@ import type { DocumentSnapshot, Firestore } from "firebase-admin/firestore";
 import { COLLECTIONS } from "@/shared/server/collections";
 import { ConflictError } from "@/shared/server/errors";
 import { MemberSchema } from "../schema";
+import { buildSearchKeys, longestQueryWord, matchesMemberQuery, passesLendable, sortAndLimit } from "./member-search";
 import type { MemberRecord, MemberRepository } from "./repository";
 
 /** Documento fijo que garantiza el ADMINISTRADOR único: `create()` falla si ya existe. */
@@ -28,6 +29,9 @@ function rethrowAsConflict<T>(error: T): never {
   throw error;
 }
 
+/** B4 · Tope de documentos que una búsqueda lee de Firestore. */
+const SEARCH_READ_LIMIT = 200;
+
 /** Valida el documento leído (rol incluido) antes de devolverlo. */
 function toRecord(snapshot: DocumentSnapshot): MemberRecord {
   return { id: snapshot.id, ...MemberDocumentSchema.parse(snapshot.data()) };
@@ -40,7 +44,9 @@ export function createFirestoreMemberRepository(db: Firestore): MemberRepository
   return {
     async create(record) {
       const valid = MemberSchema.parse(record);
-      const { id, ...fields } = valid;
+      const { id, ...publicFields } = valid;
+      // `search_keys` es un detalle interno del repositorio (B4): se guarda pero nunca sale en `MemberRecord`.
+      const fields = { ...publicFields, search_keys: buildSearchKeys(valid.name, valid.email) };
       const ref = members.doc(id);
       try {
         if (valid.role === "ADMINISTRADOR") {
@@ -63,6 +69,13 @@ export function createFirestoreMemberRepository(db: Firestore): MemberRepository
       }
       return toRecord(snapshot);
     },
+    async findByIds(ids) {
+      if (ids.length === 0) {
+        return [];
+      }
+      const snapshots = await db.getAll(...ids.map((id) => members.doc(id)));
+      return snapshots.filter((snapshot) => snapshot.exists).map(toRecord);
+    },
     async findByEmail(email) {
       const result = await members.where("email", "==", email).limit(1).get();
       const first = result.docs.at(0);
@@ -78,6 +91,17 @@ export function createFirestoreMemberRepository(db: Firestore): MemberRepository
     async list() {
       const result = await members.get();
       return result.docs.map(toRecord);
+    },
+    async search(q, limit, lendable) {
+      const key = longestQueryWord(q);
+      if (key.length < 2) {
+        return [];
+      }
+      const result = await members.where("search_keys", "array-contains", key).limit(SEARCH_READ_LIMIT).get();
+      const found = result.docs
+        .map(toRecord)
+        .filter((record) => matchesMemberQuery(record, q) && passesLendable(record, lendable));
+      return sortAndLimit(found, limit);
     },
   };
 }

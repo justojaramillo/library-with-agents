@@ -33,6 +33,13 @@ export function createFirestoreBookRepository(db: Firestore): BookRepository {
       }
       return toRecord(snapshot.id, snapshot.data());
     },
+    async findByIds(ids) {
+      if (ids.length === 0) {
+        return [];
+      }
+      const snapshots = await db.getAll(...ids.map((id) => books.doc(id)));
+      return snapshots.filter((snapshot) => snapshot.exists).map((snapshot) => toRecord(snapshot.id, snapshot.data()));
+    },
     async findByIsbn(isbn) {
       const result = await books.where("isbn", "==", isbn).limit(1).get();
       const first = result.docs[0];
@@ -41,11 +48,12 @@ export function createFirestoreBookRepository(db: Firestore): BookRepository {
       }
       return toRecord(first.id, first.data());
     },
-    async search(q) {
+    async search(q, limit) {
       const result = await books.get();
       return filterBooks(
         result.docs.map((doc) => toRecord(doc.id, doc.data())),
         q,
+        limit,
       );
     },
   };

@@ -12,7 +12,15 @@ function toLoan(id: string, fields: DocumentData | undefined): Loan {
 }
 
 function byDueDate(a: Loan, b: Loan): number {
-  return a.due_at.localeCompare(b.due_at);
+  const byDue = a.due_at.localeCompare(b.due_at);
+  if (byDue !== 0) {
+    return byDue;
+  }
+  const byLoaned = a.loaned_at.localeCompare(b.loaned_at);
+  if (byLoaned !== 0) {
+    return byLoaned;
+  }
+  return a.id.localeCompare(b.id);
 }
 
 function byLoanDate(a: Loan, b: Loan): number {
@@ -93,6 +101,10 @@ export function createFirestoreLoanRepository(db: Firestore): LoanRepository {
     },
     async listActiveByMember(memberId) {
       const result = await activeBy("member_id", memberId).get();
+      return result.docs.map((doc) => toLoan(doc.id, doc.data())).sort(byDueDate);
+    },
+    async listActive() {
+      const result = await loans.where("returned_at", "==", null).get();
       return result.docs.map((doc) => toLoan(doc.id, doc.data())).sort(byDueDate);
     },
     async listAll() {

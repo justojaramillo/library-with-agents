@@ -50,3 +50,23 @@ export const MemberSchema = z.object({
   active: z.boolean(),
 });
 export type Member = z.infer<typeof MemberSchema>;
+
+/**
+ * F34 · Buscar personas (para elegir a quién prestar) — entrada de `GET /api/members?q=&limit=&lendable=`.
+ * `q`: de 2 a 100 caracteres y al menos una palabra de 2 o más letras o dígitos. `lendable=true` limita
+ * a cuentas activas con rol de prestatario. Detalle en `docs/specs/F34-F35-pantallas-de-prestamos.md` (B1–B5).
+ */
+export const SearchMembersQuerySchema = z.object({
+  q: z
+    .string()
+    .trim()
+    .min(2)
+    .max(100)
+    .regex(/[\p{L}\p{N}]{2}/u, "Escribe al menos una palabra de 2 letras o números"),
+  limit: z.coerce.number().int().min(1).max(20).default(10),
+  lendable: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+});
+export type SearchMembersQuery = z.infer<typeof SearchMembersQuerySchema>;

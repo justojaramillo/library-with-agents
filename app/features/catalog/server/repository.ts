@@ -8,8 +8,10 @@ export interface BookRepository {
   create(newBook: Omit<BookRecord, "id">): Promise<BookRecord>;
   findById(id: Id): Promise<BookRecord | undefined>;
   findByIsbn(isbn: string): Promise<BookRecord | undefined>;
-  /** Coincidencia parcial en título o autor, sin distinguir mayúsculas, ordenada por título. `""` lista todo. */
-  search(q: string): Promise<BookRecord[]>;
+  /** Los libros con esos ids (ya sin repetidos, hasta 500). Los inexistentes se omiten; el orden no está garantizado. */
+  findByIds(ids: Id[]): Promise<BookRecord[]>;
+  /** Coincidencia parcial en título o autor, sin distinguir mayúsculas, ordenada por título. `""` lista todo. Con `limit`, recorta tras ordenar. */
+  search(q: string, limit?: number): Promise<BookRecord[]>;
 }
 
 /**

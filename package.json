@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "seed": "tsx --conditions=react-server scripts/seed.ts",
+    "backfill:members": "tsx --conditions=react-server scripts/backfill-member-search.ts",
     "check:env": "tsx scripts/check-env.ts",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test",
     "check:full": "npm run check && npm run build"

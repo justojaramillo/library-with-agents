@@ -23,8 +23,10 @@ export interface LoanRepository {
   markReturned(id: Id, returnedAt: string): Promise<Loan>;
   countActiveByMember(memberId: Id): Promise<number>;
   countActiveByBook(bookId: Id): Promise<number>;
-  /** Ordenados por fecha de vencimiento. */
+  /** Ordenados por `due_at`, luego `loaned_at` y luego `id` (ascendente). */
   listActiveByMember(memberId: Id): Promise<Loan[]>;
+  /** Todos los préstamos sin devolver, con el mismo orden que `listActiveByMember` (F34). */
+  listActive(): Promise<Loan[]>;
   /** Para el panel (F9). */
   listAll(): Promise<Loan[]>;
 }

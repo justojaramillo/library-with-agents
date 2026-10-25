@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { getContainer } from "@/features/container";
 import { BookList } from "@/features/catalog/ui/book-list";
@@ -26,6 +27,8 @@ function parseQuery(value: string | string[] | undefined): string {
 /** Parte dinámica: lee `searchParams` (dato de la petición), por eso va dentro de `<Suspense>`. */
 async function CatalogContent({ searchParams }: { searchParams: HomeSearchParams }) {
   const params = await searchParams;
+  // Con partialPrefetching el prerender ya trae `searchParams`; esperar la conexión evita prerenderizar la lectura de Firestore.
+  await connection();
   const q = parseQuery(params.q);
   const books = await getContainer().books.search(q);
 

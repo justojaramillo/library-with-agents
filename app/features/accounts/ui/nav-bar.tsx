@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { STAFF_ROLES, type Role } from "@/shared/schema";
+import { BORROWER_ROLES, STAFF_ROLES, type Role } from "@/shared/schema";
 import { LogoutButton } from "./logout-button";
 import { ROLE_LABELS } from "./role-labels";
 
@@ -11,21 +11,46 @@ export interface NavBarUser {
 const NAV_LINK_CLASS =
   "inline-flex min-h-11 items-center rounded px-3 text-surface underline-offset-4 hover:bg-primary-hover hover:underline";
 
-/** Solo para mostrar u ocultar el enlace; el servidor valida de verdad. */
+/** Solo para mostrar u ocultar enlaces; el servidor valida de verdad. */
 function isStaff(role: Role): boolean {
   return (STAFF_ROLES as readonly Role[]).includes(role);
 }
 
-function AccountsLink({ role }: { role: Role }) {
+function isBorrower(role: Role): boolean {
+  return (BORROWER_ROLES as readonly Role[]).includes(role);
+}
+
+function NavItem({ href, label }: { href: string; label: string }) {
+  return (
+    <li>
+      <Link href={href} className={NAV_LINK_CLASS}>
+        {label}
+      </Link>
+    </li>
+  );
+}
+
+function StaffLinks({ role }: { role: Role }) {
   if (!isStaff(role)) {
     return null;
   }
   return (
-    <li>
-      <Link href="/cuentas" className={NAV_LINK_CLASS}>
-        Cuentas
-      </Link>
-    </li>
+    <>
+      <NavItem href="/prestamos" label="Préstamos" />
+      <NavItem href="/cuentas" label="Cuentas" />
+    </>
+  );
+}
+
+function BorrowerLinks({ role }: { role: Role }) {
+  if (!isBorrower(role)) {
+    return null;
+  }
+  return (
+    <>
+      <NavItem href="/mis-prestamos" label="Mis préstamos" />
+      <NavItem href="/mis-vencidos" label="Mis vencidos" />
+    </>
   );
 }
 
@@ -50,7 +75,7 @@ function SessionArea({ user }: { user: NavBarUser | null }) {
   );
 }
 
-/** Barra principal: «Biblioteca» siempre, «Cuentas» solo al personal y el área de sesión a la derecha. */
+/** Barra principal: «Biblioteca» siempre, «Préstamos» y «Cuentas» al personal, «Mis préstamos» y «Mis vencidos» a quien pide prestado, y el área de sesión a la derecha. */
 export function NavBar({ user }: { user: NavBarUser | null }) {
   const role = user?.role;
   return (
@@ -60,7 +85,8 @@ export function NavBar({ user }: { user: NavBarUser | null }) {
           Biblioteca
         </Link>
       </li>
-      {role !== undefined && <AccountsLink role={role} />}
+      {role !== undefined && <StaffLinks role={role} />}
+      {role !== undefined && <BorrowerLinks role={role} />}
       <SessionArea user={user} />
     </ul>
   );

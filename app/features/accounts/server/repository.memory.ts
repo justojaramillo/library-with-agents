@@ -1,5 +1,6 @@
 import type { Id, Role } from "@/shared/schema";
 import { ConflictError } from "@/shared/server/errors";
+import { matchesMemberQuery, passesLendable, sortAndLimit } from "./member-search";
 import type { MemberRecord, MemberRepository } from "./repository";
 
 class MemoryMembers implements MemberRepository {
@@ -21,6 +22,11 @@ class MemoryMembers implements MemberRepository {
     return row && { ...row };
   }
 
+  async findByIds(ids: Id[]) {
+    const wanted = new Set(ids);
+    return [...this.rows.values()].filter((row) => wanted.has(row.id)).map((row) => ({ ...row }));
+  }
+
   async findByEmail(email: string) {
     const row = [...this.rows.values()].find((member) => member.email === email);
     return row && { ...row };
@@ -32,6 +38,14 @@ class MemoryMembers implements MemberRepository {
 
   async list() {
     return [...this.rows.values()].map((member) => ({ ...member }));
+  }
+
+  async search(q: string, limit: number, lendable: boolean) {
+    const found = [...this.rows.values()]
+      .filter((member) => matchesMemberQuery(member, q))
+      .filter((member) => passesLendable(member, lendable))
+      .map((member) => ({ ...member }));
+    return sortAndLimit(found, limit);
   }
 }
 

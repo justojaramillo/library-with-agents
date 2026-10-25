@@ -22,15 +22,21 @@ class MemoryBooks implements BookRepository {
     return row && { ...row };
   }
 
+  async findByIds(ids: Id[]) {
+    const wanted = new Set(ids);
+    return this.rows.filter((book) => wanted.has(book.id)).map((book) => ({ ...book }));
+  }
+
   async findByIsbn(isbn: string) {
     const row = this.rows.find((book) => book.isbn === isbn);
     return row && { ...row };
   }
 
-  async search(q: string) {
+  async search(q: string, limit?: number) {
     return filterBooks(
       this.rows.map((book) => ({ ...book })),
       q,
+      limit,
     );
   }
 }

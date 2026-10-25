@@ -3,6 +3,18 @@ import { ConflictError, NotFoundError } from "@/shared/server/errors";
 import type { Loan } from "../schema";
 import type { LendOutcome, LoanRepository } from "./repository";
 
+function byDueLoanedId(a: Loan, b: Loan): number {
+  const byDue = a.due_at.localeCompare(b.due_at);
+  if (byDue !== 0) {
+    return byDue;
+  }
+  const byLoaned = a.loaned_at.localeCompare(b.loaned_at);
+  if (byLoaned !== 0) {
+    return byLoaned;
+  }
+  return a.id.localeCompare(b.id);
+}
+
 class MemoryLoans implements LoanRepository {
   private rows: Loan[] = [];
   private lastId = 0;
@@ -65,7 +77,14 @@ class MemoryLoans implements LoanRepository {
     return this.rows
       .filter((loan) => loan.member_id === memberId && loan.returned_at === null)
       .map((loan) => ({ ...loan }))
-      .sort((a, b) => a.due_at.localeCompare(b.due_at));
+      .sort(byDueLoanedId);
+  }
+
+  async listActive() {
+    return this.rows
+      .filter((loan) => loan.returned_at === null)
+      .map((loan) => ({ ...loan }))
+      .sort(byDueLoanedId);
   }
 
   async listAll() {

@@ -33,9 +33,11 @@ function failingCreate(inner: MemberRepository): MemberRepository {
       throw new Error(`Firestore caído al guardar ${record.email}`);
     },
     findById: (id) => inner.findById(id),
+    findByIds: (ids) => inner.findByIds(ids),
     findByEmail: (email) => inner.findByEmail(email),
     existsWithRole: (role) => inner.existsWithRole(role),
     list: () => inner.list(),
+    search: (q, limit, lendable) => inner.search(q, limit, lendable),
   };
 }
 

@@ -56,6 +56,17 @@ export const OverdueLoanSchema = z.object({
 });
 export type OverdueLoan = z.infer<typeof OverdueLoanSchema>;
 
+/**
+ * F34 · F35 · Préstamo activo con su estado a la fecha. `days_late` es 0 si no está vencido
+ * (`due_at >= now`); si lo está, igual que en `OverdueLoan`. `fine_cop` es la multa acumulada hoy.
+ */
+export const ActiveLoanSchema = z.object({
+  loan: LoanSchema,
+  days_late: z.number().int().min(0),
+  fine_cop: z.number().int().min(0),
+});
+export type ActiveLoan = z.infer<typeof ActiveLoanSchema>;
+
 /** Quién está pidiendo la operación (viene de la sesión, nunca del cuerpo de la petición). */
 export type Actor = { member_id: Id; role: Role };
 
@@ -70,9 +81,15 @@ export type Actor = { member_id: Id; role: Role };
  *            ForbiddenError (la cuenta no es de prestatario, o un prestatario pide a nombre de otra persona)
  *  - return: ForbiddenError (el actor no es personal), NotFoundError, ConflictError (ya devuelto)
  *  - listOverdue: NotFoundError (cuenta), ForbiddenError (un prestatario pide los de otra persona)
+ *  - listActive: ForbiddenError (el actor no es personal)
+ *  - listActiveByMember: igual que listOverdue
  */
 export interface LoanServicePort {
   lend(input: LendInput, actor: Actor, now: Date): Promise<Loan>;
   returnLoan(loanId: Id, actor: Actor, now: Date): Promise<ReturnResult>;
   listOverdue(memberId: Id, actor: Actor, now: Date): Promise<OverdueLoan[]>;
+  /** F34 · Todos los préstamos activos, por `due_at` ascendente. Solo personal. */
+  listActive(actor: Actor, now: Date): Promise<ActiveLoan[]>;
+  /** F34 · F35 · Los activos de una persona, por `due_at` ascendente. */
+  listActiveByMember(memberId: Id, actor: Actor, now: Date): Promise<ActiveLoan[]>;
 }

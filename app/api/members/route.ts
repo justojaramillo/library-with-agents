@@ -1,12 +1,24 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getContainer } from "@/features/container";
-import { CreateMemberInputSchema } from "@/features/accounts/schema";
+import { CreateMemberInputSchema, SearchMembersQuerySchema } from "@/features/accounts/schema";
 import { assertSameOrigin, handleError, requireStaff } from "@/shared/server/http";
 
-/** Listado de cuentas — solo personal. */
-export async function GET() {
+/**
+ * Solo personal. Con `q` busca personas (F34, B1–B5: `?q=&limit=&lendable=`; `q` inválido da 400);
+ * sin `q` lista todas las cuentas.
+ */
+export async function GET(req: NextRequest) {
   try {
     await requireStaff();
+    const params = req.nextUrl.searchParams;
+    if (params.has("q")) {
+      const query = SearchMembersQuerySchema.parse({
+        q: params.get("q") ?? undefined,
+        limit: params.get("limit") ?? undefined,
+        lendable: params.get("lendable") ?? undefined,
+      });
+      return NextResponse.json(await getContainer().members.search(query));
+    }
     return NextResponse.json(await getContainer().members.list());
   } catch (error) {
     return handleError(error);

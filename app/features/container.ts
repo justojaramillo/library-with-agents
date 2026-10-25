@@ -25,7 +25,13 @@ function build() {
   return {
     books: createBookService({ books: bookRepository, loans: loanRepository }),
     // Solo lo seguro para rutas HTTP: se copian los métodos uno a uno para que `provision` no sea alcanzable.
-    members: { register: memberService.register, get: memberService.get, list: memberService.list },
+    members: {
+      register: memberService.register,
+      get: memberService.get,
+      list: memberService.list,
+      search: memberService.search,
+      getMany: memberService.getMany,
+    },
     // Alta con cualquier rol: solo para el seed y F13 (administración); ninguna ruta debe usarlo.
     admin: { provision: memberService.provision },
     auth: createAuthService({ members: memberRepository, identity }),
