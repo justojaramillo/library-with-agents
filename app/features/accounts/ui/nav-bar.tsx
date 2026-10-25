@@ -38,6 +38,7 @@ function StaffLinks({ role }: { role: Role }) {
     <>
       <NavItem href="/prestamos" label="Préstamos" />
       <NavItem href="/cuentas" label="Cuentas" />
+      <NavItem href="/solicitudes" label="Solicitudes" />
     </>
   );
 }
@@ -83,7 +84,7 @@ function SessionArea({ user }: { user: NavBarUser | null }) {
   );
 }
 
-/** Barra principal: «Biblioteca» siempre, «Préstamos» y «Cuentas» al personal, «Mis préstamos», «Mis vencidos» y «Ser docente»/«Mi rol de docente» a quien pide prestado, y el área de sesión a la derecha. */
+/** Barra principal: «Biblioteca» siempre, «Préstamos», «Cuentas» y «Solicitudes» (sin contador) al personal, «Mis préstamos», «Mis vencidos» y «Ser docente»/«Mi rol de docente» a quien pide prestado, y el área de sesión a la derecha. */
 export function NavBar({ user }: { user: NavBarUser | null }) {
   const role = user?.role;
   return (

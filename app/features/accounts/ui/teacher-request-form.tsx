@@ -4,8 +4,13 @@ import { useRouter } from "next/navigation";
 import { useId, useRef, useState } from "react";
 // Primero: fija Zod sin compilación antes de que `../schema` cree sus esquemas (CSP).
 import "@/shared/ui/client-setup";
-import { type CreateTeacherRequestInput, CreateTeacherRequestInputSchema, TEACHER_REQUEST_RULES } from "../schema";
-import { readErrorMessage } from "./auth-client";
+import {
+  type CreateTeacherRequestInput,
+  CreateTeacherRequestInputSchema,
+  HIDDEN_CHARACTERS_MESSAGE,
+  TEACHER_REQUEST_RULES,
+} from "../schema";
+import { readRequestErrorMessage } from "./request-error";
 
 const DEFAULT_ERROR = "No se pudo enviar la solicitud";
 const RATE_LIMIT_ERROR = "Demasiadas solicitudes. Inténtalo más tarde.";
@@ -26,10 +31,18 @@ async function postRequest(input: CreateTeacherRequestInput): Promise<string | n
     if (res.status === 429) {
       return RATE_LIMIT_ERROR;
     }
-    return await readErrorMessage(res, DEFAULT_ERROR);
+    return await readRequestErrorMessage(res, DEFAULT_ERROR);
   } catch {
     return DEFAULT_ERROR;
   }
+}
+
+/** Si la nota trae caracteres invisibles se dice eso; si no, el rango de caracteres. */
+function messageForInvalidNote(issues: { message: string }[]): string {
+  if (issues.some((issue) => issue.message === HIDDEN_CHARACTERS_MESSAGE)) {
+    return HIDDEN_CHARACTERS_MESSAGE;
+  }
+  return INVALID_NOTE_ERROR;
 }
 
 /** Largo de la nota como lo cuenta el contrato: recortada y por caracteres. */
@@ -82,7 +95,7 @@ export function TeacherRequestForm() {
     }
     const input = CreateTeacherRequestInputSchema.safeParse({ note });
     if (!input.success) {
-      setError(INVALID_NOTE_ERROR);
+      setError(messageForInvalidNote(input.error.issues));
       return;
     }
     busy.current = true;

@@ -105,9 +105,23 @@ export const TEACHER_REQUEST_RULES = {
 export const TeacherRequestStatusSchema = z.enum(["PENDIENTE", "APROBADA", "RECHAZADA"]);
 export type TeacherRequestStatus = z.infer<typeof TeacherRequestStatusSchema>;
 
+/** F37 · Caracteres que no se aceptan en `note` ni `reason`: control (salvo el salto de línea), de ancho cero y marcas de dirección. */
+const HIDDEN_CHARACTERS =
+  /[\u0000-\u0009\u000B-\u001F\u007F-\u009F\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u2069\uFEFF]/;
+export const HIDDEN_CHARACTERS_MESSAGE = "No uses caracteres de control ni invisibles.";
+
+function hasNoHiddenCharacters(value: string): boolean {
+  return !HIDDEN_CHARACTERS.test(value);
+}
+
 /** F11 · Solicitar el rol de docente — entrada. La identidad sale de la sesión; cualquier otro campo se ignora. */
 export const CreateTeacherRequestInputSchema = z.object({
-  note: z.string().trim().min(TEACHER_REQUEST_RULES.noteMin).max(TEACHER_REQUEST_RULES.noteMax),
+  note: z
+    .string()
+    .trim()
+    .refine(hasNoHiddenCharacters, HIDDEN_CHARACTERS_MESSAGE)
+    .min(TEACHER_REQUEST_RULES.noteMin)
+    .max(TEACHER_REQUEST_RULES.noteMax),
 });
 export type CreateTeacherRequestInput = z.infer<typeof CreateTeacherRequestInputSchema>;
 
@@ -120,7 +134,13 @@ function emptyToUndefined(value: string): string | undefined {
 
 /** F12 · Rechazar una solicitud — entrada. `reason` es opcional; `""` (tras recortar) equivale a ausente. */
 export const RejectTeacherRequestInputSchema = z.object({
-  reason: z.string().trim().max(TEACHER_REQUEST_RULES.reasonMax).transform(emptyToUndefined).optional(),
+  reason: z
+    .string()
+    .trim()
+    .refine(hasNoHiddenCharacters, HIDDEN_CHARACTERS_MESSAGE)
+    .max(TEACHER_REQUEST_RULES.reasonMax)
+    .transform(emptyToUndefined)
+    .optional(),
 });
 export type RejectTeacherRequestInput = z.infer<typeof RejectTeacherRequestInputSchema>;
 
