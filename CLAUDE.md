@@ -12,7 +12,7 @@
 
 **F5–F8 (préstamos físicos) construido** (spec `docs/specs/F5-F8-prestamos-fisicos.md` aprobada, revisión de `security` hecha, nota en `docs/handoffs/F5-F8-prestamos-fisicos.md`; `check:full` en verde, 568 pruebas). Falta la persona: probarlo cuando se despliegue.
 
-**Siguiente paso:** escribir con `write-spec` la spec de las pantallas F34–F35 (`/prestamos`, `/mis-prestamos`, `/mis-vencidos`) para que la persona la apruebe; luego 2 agentes de frontend en paralelo (personal / prestatario). Último commit de código: F5–F8 (`29894d9`, aún sin push).
+**Siguiente paso:** la spec de F34–F35 (`docs/specs/F34-F35-pantallas-de-prestamos.md`) está en **Borrador**: la persona debe aprobarla (3 preguntas abiertas). Luego: contrato (`ActiveLoan`, `listActive*`), backend (pequeño) y después 2 agentes de frontend ∥ tests, `check:full`, `security`, nota en `docs/handoffs/`. Último commit de código: F5–F8 (`29894d9`, aún sin push).
 
 ## Pendientes del proyecto (borra cada uno al cerrarlo; si surge uno nuevo, añádelo aquí)
 Al empezar una sesión, recuérdale a la persona lo que siga abierto y pregunta por dónde quiere seguir.
@@ -31,6 +31,8 @@ Al empezar una sesión, recuérdale a la persona lo que siga abierto y pregunta 
 - [ ] **De F5–F8 (`docs/handoffs/F5-F8-prestamos-fisicos.md`):** prueba de atomicidad de `loans` contra el emulador de Firestore; B3 (documento corrupto → 400 en vez de 500); B4 (ventana entre comprobar cuenta/libro y crear el préstamo); B5 (reserva remota de ejemplares: revisar en la Ola 2 con el límite de tasa).
 - [ ] **Pruebas que faltan:** rutas HTTP (401/403 por rol, 400 con un rol no permitido, logout desde otro origen), repositorios de Firestore y la re-validación en `register`/`provision` con roles inventados. De F33: `readNavUser` (inactiva/inexistente → sin sesión) y que el HTML estático de `/` no contenga «Ingresar» ni «Cerrar sesión» tras el build; decidir si se filtran caracteres Unicode de control en el nombre.
 - [ ] Repetir la **prueba de reconstrucción en una carpeta vacía** (`docs/bootstrap.md`) cuando haya más features, para ver si los docs siguen siendo suficientes.
+
+- [ ] **Semilla autónoma** (análisis del 2026-10-26): armar un kit/script que copie la lista completa de `docs/bootstrap.md §2` con un `CLAUDE.md` semilla (sin «Dónde quedamos») y `docs/handoffs/` solo con la plantilla; añadir `docs/build-plan.md` con el orden, el criterio de parada y el primer mensaje; hacer la spec F5–F8 autosuficiente (puertos completos de `LoanRepository`, `BookLookup`, `MemberLookup`, `FineStrategy`; `markReturned` atómico → `ConflictError`; `IdSchema` ≤ 128 sin «/»); regla en `feature-workflow`: todo hallazgo de `security` que cambie el comportamiento entra en la spec en el mismo commit; actualizar la tabla de `bootstrap.md` (paso 5); la prueba en carpeta vacía debe usar **otro proyecto de Firebase**.
 
 ### Próximas features
 - [ ] **Ola 1:** spec y construcción de las pantallas F34 (`/prestamos`) y F35 (`/mis-prestamos`, `/mis-vencidos`). Después Ola 2 (cuentas: autorregistro, docente, recuperar contraseña con Firebase) y Ola 3 (lector con Markdown en Vercel Blob). Faltan las specs de F9–F32 y F34–F38.
