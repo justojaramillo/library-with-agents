@@ -1,6 +1,6 @@
 # F0 · Base del proyecto (capa compartida, entorno, sesión y datos de ejemplo)
 
-- **Estado:** Borrador (solo la persona la pasa a `Aprobada`)
+- **Estado:** Aprobada
 - **Rol(es):** todos (infraestructura)
 - **Contrato afectado:** `app/shared/schema.ts` (ya fijado); no cambia contratos de features
 - **Decisiones:** ADR-0001 (arquitectura), ADR-0003 (Firebase y Blob), ADR-0005 (convenciones), ADR-0007 (despliegue)

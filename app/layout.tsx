@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Suspense } from "react";
+import { NavBarFallback } from "@/features/accounts/ui/nav-bar";
+import { SessionNav } from "./session-nav";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Biblioteca de préstamos",
   description: "Proyecto del curso de Tendencias: desarrollo con agentes de IA",
 };
-
-const NAV_LINK_CLASS =
-  "inline-flex min-h-11 items-center rounded px-3 text-surface hover:bg-primary-hover hover:text-surface";
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
@@ -19,23 +18,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </a>
         <header className="bg-primary-strong text-surface">
           <nav aria-label="Principal" className="mx-auto w-full max-w-5xl px-4">
-            <ul className="flex flex-wrap items-center gap-x-1 gap-y-1 py-2">
-              <li>
-                <Link href="/" className={`${NAV_LINK_CLASS} font-semibold`}>
-                  Biblioteca
-                </Link>
-              </li>
-              <li>
-                <Link href="/cuentas" className={NAV_LINK_CLASS}>
-                  Cuentas
-                </Link>
-              </li>
-              <li className="ml-auto">
-                <Link href="/login" className={NAV_LINK_CLASS}>
-                  Ingresar
-                </Link>
-              </li>
-            </ul>
+            <Suspense fallback={<NavBarFallback />}>
+              <SessionNav />
+            </Suspense>
           </nav>
         </header>
         <main id="contenido" className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">

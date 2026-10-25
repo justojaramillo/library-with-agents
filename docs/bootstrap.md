@@ -29,10 +29,10 @@ El orquestador sigue la skill `feature-workflow` (especificar → contrato → d
 
 | Paso | Spec | Qué se construye | Estado de la spec |
 | --- | --- | --- | --- |
-| 1 | `F0-base-del-proyecto` (reglas 1–15, 18–20) | Capa compartida: errores y HTTP, origen, sesión, Firebase, entorno y `check:env` (sin contenedor ni `seed`: necesitan servicios) | Borrador |
+| 1 | `F0-base-del-proyecto` (reglas 1–15, 18–20) | Capa compartida: errores y HTTP, origen, sesión, Firebase, entorno y `check:env` (sin contenedor ni `seed`: necesitan servicios) | Aprobada |
 | 2 | `F1-registrar-libro`, `F2-buscar-libros` | Catálogo (servicio, repositorios memoria y Firestore, rutas) | Aprobada |
 | 3 | `F3-F4-roles-y-cuentas`, y al cerrarlo F0 (reglas 16–17) | Cuentas, cinco roles, ingreso, administrador único; al cerrarlo, el contenedor (`container.ts`), las rutas HTTP, el `seed` y `makeWorld` (reglas 16, 17 y 20) | Aprobada |
-| 4 | `F33-navegacion-y-pantallas-base` | Barra de navegación y pantallas `/`, `/login`, `/cuentas` | Borrador |
+| 4 | `F33-navegacion-y-pantallas-base` | Barra de navegación y pantallas `/`, `/login`, `/cuentas` | Aprobada |
 | 5 | por escribir (`write-spec`) | Ola 1: F5–F8 préstamos, F34–F35 pantallas | Falta |
 | 6 | por escribir | Olas 2–5 según `docs/features.md` | Falta |
 
@@ -62,4 +62,5 @@ Primer mensaje sugerido para el orquestador:
 | `npm run seed` falla con `server-only` | Falta `--conditions=react-server` | Usar el script `seed` de `package.json` |
 | Un hook de guard falla al empezar | Aún no se instalaron dependencias | `npm install` |
 | El ingreso funciona pero nada cambia en pantalla | Falta F33 | Implementar la spec F33 |
+| Tras `npm run build` el HTML estático de `/` contiene «Ingresar» o el log del build dice «No se pudo leer la sesión» | Un `catch` se traga la señal de prerender de Next | Llamar a `unstable_rethrow(error)` primero en todo `catch` que envuelva `cookies()` o lecturas de sesión (F33, regla 6) |
 | Una prueba de componente de React no corre | Vitest usa entorno `node` y solo incluye `*.test.ts`; no hay jsdom | Probar componentes con `renderToStaticMarkup` y `createElement` (sin dependencias nuevas) |
