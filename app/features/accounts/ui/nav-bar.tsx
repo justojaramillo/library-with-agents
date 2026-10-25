@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BORROWER_ROLES, STAFF_ROLES, type BorrowerRole, type Role } from "@/shared/schema";
 import { LogoutButton } from "./logout-button";
+import { CollapsibleLinks, MenuLink, UserMenu } from "./nav-menu";
 import { ROLE_LABELS } from "./role-labels";
 
 export interface NavBarUser {
@@ -10,6 +11,7 @@ export interface NavBarUser {
 
 const NAV_LINK_CLASS =
   "inline-flex min-h-11 items-center rounded px-3 text-surface underline-offset-4 hover:bg-primary-hover hover:underline";
+const LIST_CLASS = "flex flex-wrap items-center gap-x-1 gap-y-1 py-2";
 
 /** Solo para mostrar u ocultar enlaces; el servidor valida de verdad. */
 function isStaff(role: Role): boolean {
@@ -23,17 +25,12 @@ function isBorrower(role: Role): role is BorrowerRole {
 function NavItem({ href, label }: { href: string; label: string }) {
   return (
     <li>
-      <Link href={href} className={NAV_LINK_CLASS}>
-        {label}
-      </Link>
+      <MenuLink href={href} label={label} />
     </li>
   );
 }
 
 function StaffLinks({ role }: { role: Role }) {
-  if (!isStaff(role)) {
-    return null;
-  }
   return (
     <>
       <NavItem href="/prestamos" label="Préstamos" />
@@ -59,10 +56,7 @@ const TEACHER_LINK_LABELS: Record<BorrowerRole, string> = {
   DOCENTE: "Mi rol de docente",
 };
 
-function BorrowerLinks({ role }: { role: Role }) {
-  if (!isBorrower(role)) {
-    return null;
-  }
+function BorrowerLinks({ role }: { role: BorrowerRole }) {
   return (
     <>
       <NavItem href="/mis-prestamos" label="Mis préstamos" />
@@ -72,6 +66,29 @@ function BorrowerLinks({ role }: { role: Role }) {
   );
 }
 
+/** F15 · Los enlaces del rol (personal o prestatario), en línea desde 768 px y tras «Menú» por debajo. Sin sesión no hay ninguno. */
+function RoleLinks({ role }: { role: Role | undefined }) {
+  if (role === undefined) {
+    return null;
+  }
+  if (isStaff(role)) {
+    return (
+      <CollapsibleLinks>
+        <StaffLinks role={role} />
+      </CollapsibleLinks>
+    );
+  }
+  if (isBorrower(role)) {
+    return (
+      <CollapsibleLinks>
+        <BorrowerLinks role={role} />
+      </CollapsibleLinks>
+    );
+  }
+  return null;
+}
+
+/** Área de sesión (derecha): «Ingresar» sin sesión; con sesión, el menú de usuario con «Cambiar contraseña» y «Cerrar sesión». */
 function SessionArea({ user }: { user: NavBarUser | null }) {
   if (user === null) {
     return (
@@ -83,28 +100,32 @@ function SessionArea({ user }: { user: NavBarUser | null }) {
     );
   }
   return (
-    <li className="ml-auto flex min-w-0 max-w-full flex-wrap items-center gap-x-3 gap-y-1">
-      <p className="min-w-0 break-words">
-        <strong className="break-words font-semibold">{user.name}</strong>{" "}
-        <small className="text-surface">({ROLE_LABELS[user.role]})</small>
-      </p>
-      <LogoutButton />
-    </li>
+    <UserMenu name={user.name} roleLabel={ROLE_LABELS[user.role]}>
+      <li>
+        <MenuLink href="/contrasena" label="Cambiar contraseña" />
+      </li>
+      <li>
+        <LogoutButton />
+      </li>
+    </UserMenu>
   );
 }
 
-/** Barra principal: «Biblioteca» siempre, «Préstamos», «Cuentas» y «Solicitudes» (sin contador) al personal, «Personal» solo al administrador, «Mis préstamos», «Mis vencidos» y «Ser docente»/«Mi rol de docente» a quien pide prestado, y el área de sesión a la derecha. */
+/**
+ * Barra principal (F15, reglas 10–12): «Biblioteca» siempre; los enlaces del rol (personal: «Préstamos», «Cuentas»,
+ * «Solicitudes» y, solo al administrador, «Personal»; prestatario: «Mis préstamos», «Mis vencidos» y «Ser docente»/«Mi rol de docente»)
+ * en línea desde 768 px y tras el botón «Menú» por debajo; y a la derecha «Ingresar» o el menú de usuario.
+ */
 export function NavBar({ user }: { user: NavBarUser | null }) {
   const role = user?.role;
   return (
-    <ul className="flex flex-wrap items-center gap-x-1 gap-y-1 py-2">
+    <ul className={LIST_CLASS}>
       <li>
         <Link href="/" className={`${NAV_LINK_CLASS} font-semibold`}>
           Biblioteca
         </Link>
       </li>
-      {role !== undefined && <StaffLinks role={role} />}
-      {role !== undefined && <BorrowerLinks role={role} />}
+      <RoleLinks role={role} />
       <SessionArea user={user} />
     </ul>
   );
@@ -113,7 +134,7 @@ export function NavBar({ user }: { user: NavBarUser | null }) {
 /** Barra mínima mientras se lee la sesión (fallback de `<Suspense>`). */
 export function NavBarFallback() {
   return (
-    <ul className="flex flex-wrap items-center gap-x-1 gap-y-1 py-2">
+    <ul className={LIST_CLASS}>
       <li>
         <Link href="/" className={`${NAV_LINK_CLASS} font-semibold`}>
           Biblioteca

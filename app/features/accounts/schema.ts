@@ -196,3 +196,18 @@ export const MyTeacherRequestSchema = z.object({
   email_verified: z.boolean(),
 });
 export type MyTeacherRequest = z.infer<typeof MyTeacherRequestSchema>;
+
+/**
+ * F15 · Cambiar mi contraseña — entrada. Solo se valida en el navegador: el cambio lo hace el SDK de cliente de Firebase.
+ * La nueva no se recorta (una contraseña conserva sus espacios) y debe ser distinta de la actual.
+ */
+export const ChangePasswordInputSchema = z
+  .object({
+    current_password: z.string().min(1).max(100),
+    new_password: z.string().min(8).max(100),
+  })
+  .refine((value) => value.new_password !== value.current_password, {
+    message: "La nueva contraseña debe ser distinta de la actual.",
+    path: ["new_password"],
+  });
+export type ChangePasswordInput = z.infer<typeof ChangePasswordInputSchema>;

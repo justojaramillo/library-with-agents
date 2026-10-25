@@ -8,6 +8,7 @@ import { AccountList } from "@/features/accounts/ui/account-list";
 import { AccountPagination, PageNotFound } from "@/features/accounts/ui/account-pagination";
 import { IdSchema, STAFF_ROLES, type Role } from "@/shared/schema";
 import { getSessionUser } from "@/shared/server/http";
+import { ButtonLink } from "@/shared/ui/button-link";
 
 type AccountsSearchParams = PageProps<"/cuentas">["searchParams"];
 
@@ -71,6 +72,9 @@ async function AccountsContent({ searchParams }: { searchParams: AccountsSearchP
   }
   return (
     <>
+      <p>
+        <ButtonLink href="/cuentas/nuevo">Nueva cuenta</ButtonLink>
+      </p>
       <AccountList members={page.members} actor={{ role: user.role, id: user.member_id }} />
       <AccountPagination nextAfter={page.next_after} hasCursor={after !== undefined} />
     </>

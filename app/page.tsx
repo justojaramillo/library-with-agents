@@ -8,6 +8,7 @@ import { SearchBooksQuerySchema } from "@/features/catalog/schema";
 import { SearchForm } from "@/features/catalog/ui/search-form";
 import { TooManyRequestsError } from "@/shared/server/errors";
 import { clientKey, enforceRateLimit } from "@/shared/server/security/rate-limit";
+import { RegisterBookLink } from "./register-book-link";
 
 type HomeSearchParams = PageProps<"/">["searchParams"];
 
@@ -91,9 +92,14 @@ async function CatalogContent({ searchParams }: { searchParams: HomeSearchParams
 export default function Home({ searchParams }: PageProps<"/">) {
   return (
     <section aria-labelledby="catalogo-titulo" className="space-y-6">
-      <h1 id="catalogo-titulo" className="text-2xl font-semibold">
-        Catálogo
-      </h1>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 id="catalogo-titulo" className="text-2xl font-semibold">
+          Catálogo
+        </h1>
+        <Suspense fallback={null}>
+          <RegisterBookLink />
+        </Suspense>
+      </div>
       <Suspense fallback={<p role="status">Cargando catálogo…</p>}>
         <CatalogContent searchParams={searchParams} />
       </Suspense>

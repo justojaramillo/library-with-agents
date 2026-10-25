@@ -40,7 +40,7 @@ export function LogoutButton() {
       type="button"
       onClick={onClick}
       disabled={pending}
-      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded border border-surface px-3 font-medium text-surface hover:bg-primary-hover disabled:opacity-70"
+      className="flex min-h-11 w-full items-center rounded px-3 text-left text-surface underline-offset-4 hover:bg-primary-hover hover:underline disabled:opacity-70"
     >
       Cerrar sesión
     </button>

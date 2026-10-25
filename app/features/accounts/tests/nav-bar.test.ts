@@ -7,6 +7,7 @@ import { LogoutButton } from "@/features/accounts/ui/logout-button";
 import { NavBar } from "@/features/accounts/ui/nav-bar";
 import { ROLE_LABELS } from "@/features/accounts/ui/role-labels";
 import { ROLES, type Role, STAFF_ROLES } from "@/shared/schema";
+import { textOwners } from "@/tests/helpers/html-text";
 
 // El navegador aporta el enrutador; en pruebas (entorno node) se sustituye por uno inerte.
 vi.mock("next/navigation", () => ({
@@ -217,12 +218,14 @@ describe("Barra de navegación · nombres", () => {
   it("un nombre de 200 caracteres se muestra completo sin romper el marcado", () => {
     const longName = "A".repeat(200);
     const html = renderBar({ name: longName, role: "BIBLIOTECARIO" });
+    // F15 (reglas 10–11): la barra tiene listas anidadas (enlaces y menú de usuario), así que no se cuenta `<ul`.
     expect(html).toContain(longName);
-    expect(html.match(/<ul/g)).toHaveLength(1);
-    expect(html.match(/<\/ul>/g)).toHaveLength(1);
-    expect(html.match(/<li/g)?.length).toBe(html.match(/<\/li>/g)?.length);
+    expect(html.match(/<li\b/g)?.length).toBe(html.match(/<\/li>/g)?.length);
+    expect(html.match(/<ul\b/g)?.length).toBe(html.match(/<\/ul>/g)?.length);
+    expect(html.match(/<button\b/g)?.length).toBe(html.match(/<\/button>/g)?.length);
     expect(html).toContain("Cerrar sesión");
     expect(html).toContain("Bibliotecario/a");
+    expect(textOwners(html).filter((owner) => owner.tag === "div" || owner.tag === "span")).toEqual([]);
   });
 });
 
