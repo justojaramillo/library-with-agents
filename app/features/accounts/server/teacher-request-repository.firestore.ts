@@ -66,7 +66,7 @@ export function createFirestoreTeacherRequestRepository(db: Firestore): TeacherR
       return { member_id: memberId, ...fields };
     },
     async list(status, limit, after) {
-      // Necesita el índice compuesto `teacher_requests`: status ASC, requested_at ASC.
+      // Necesita el índice compuesto `teacher_requests`: status ASC, requested_at ASC, __name__ ASC.
       const ordered = requests.where("status", "==", status).orderBy("requested_at").orderBy(FieldPath.documentId());
       let query = ordered.limit(limit + 1);
       if (after !== undefined) {

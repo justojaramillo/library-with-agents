@@ -12,7 +12,7 @@
 **Decisiones:** constan solo en `docs/specs/F11-F12-solicitud-de-docente.md`.
 
 **Pendiente / bloqueos:**
-- **Índice de Firestore (lo hace la persona):** el listado del personal necesita el índice compuesto `teacher_requests` (`status` ASC, `requested_at` ASC), declarado en `firestore.indexes.json` (publicarlo con `firebase deploy --only firestore:indexes` o crearlo en la consola). Sin él, `GET /api/teacher-requests` responde 500 en Firebase real; el emulador y las pruebas no lo exigen.
+- **Índice de Firestore (lo hace la persona):** el listado del personal necesita el índice compuesto `teacher_requests` (`status` ASC, `requested_at` ASC, `__name__` ASC), declarado en `firestore.indexes.json` (publicarlo con `firebase deploy --only firestore:indexes` o crearlo en la consola). Sin él, `GET /api/teacher-requests` responde 500 en Firebase real; el emulador y las pruebas no lo exigen.
 - **Probar tras desplegar:** registrar una cuenta (llega el correo de verificación), solicitar el rol sin verificar (debe pedir verificar), verificar, solicitar, aprobar con un bibliotecario, y ver el cambio en `/docente` y en el plazo del siguiente préstamo; también rechazar y comprobar la espera de 7 días.
 - **Revisión visual** de `/docente` a 360, 768 y 1024 px (nadie la ha mirado) y del comportamiento interactivo de los tres formularios (sin pruebas de navegador).
 - **De `security` (Medios y Bajos, sin cambio de código ahora):**

@@ -3,7 +3,11 @@
     {
       "collectionGroup": "teacher_requests",
       "queryScope": "COLLECTION",
-      "fields": [{ "fieldPath": "status", "order": "ASCENDING" }, { "fieldPath": "requested_at", "order": "ASCENDING" }]
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "requested_at", "order": "ASCENDING" },
+        { "fieldPath": "__name__", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
