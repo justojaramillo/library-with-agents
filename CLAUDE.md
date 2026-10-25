@@ -12,9 +12,8 @@ Al empezar una sesión, recuérdale a la persona lo que siga abierto y pregunta 
 - [ ] **Revisar las rutas** (`/`, `/login`, `/cuentas`, `/api/…`; la lista esperada está al final de `docs/features.md`). La persona dijo que las revisará ella.
 
 ### Firebase y Vercel (ADR-0003)
-- [ ] La persona habilita Authentication (correo/contraseña) y Firestore, publica `firestore.rules`, desactiva el registro desde el cliente, ejecuta `npm run seed -- --yes` (escribe en su proyecto de Firebase, sin borrar nada; imprime una vez las contraseñas aleatorias; los agentes no lo ejecutan) y prueba el ingreso.
-- [ ] La persona crea el store **privado** de Vercel Blob, conecta el repositorio a Vercel, agrega las variables de Firebase en el proyecto y despliega (README → «Configurar los servicios»). Blob se usará desde F27.
-- [ ] Hacer el **commit** y sincronizar con git cuando la persona pase el enlace del repositorio.
+- [ ] La persona ya ejecutó `npm run seed -- --yes` (los agentes no lo ejecutan). Falta que pruebe el ingreso en local y confirme que publicó `firestore.rules` y desactivó el registro desde el cliente.
+- [ ] La persona conecta el repositorio de GitHub (`justojaramillo/library-with-agents`, rama `main`) a Vercel, crea el store **privado** de Vercel Blob, agrega las variables de Firebase en el proyecto y despliega (README → «Configurar los servicios»). Blob se usará desde F27.
 
 ### Verificación y calidad
 - [ ] **Revisión visual** a 360, 768 y 1024 px de `/`, `/login` y `/cuentas` (ningún agente ha abierto un navegador).
