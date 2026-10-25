@@ -32,6 +32,17 @@
 
 **Siguiente paso:** empezar la Ola 3 (lector con Markdown en Vercel Blob) por **F27** (cargar el contenido digital de un libro y fijar sus copias digitales), que fija el contrato y el almacenamiento de las demás; después, en paralelo, F38 (préstamo digital) y el lector (F28–F31), y F32 (incidentes). Escribir cada spec con `write-spec` y esperar su aprobación; puede hacer falta un ADR para la lectura de Markdown (dependencia nueva). F5–F8, F10–F14, F16, F17, F34–F35, F37 y S1 ya están en `main`.
 
+## Plan para la próxima sesión: faltan solo 17 de 39 características
+Llevamos 22 (Olas 1 y 2 completas). Para terminar el proyecto, en este orden y con las specs escritas y aprobadas una por una (`write-spec`):
+
+| Ola | Características | Cómo se construyen |
+| --- | --- | --- |
+| **3** (lector digital, 7) | F27 → F38 ∥ F28–F31 → F32 | F27 primero (contrato de copias digitales y Vercel Blob; puede pedir un ADR para leer Markdown). Luego F38 (préstamo digital) y el lector (F28 abrir, F29 bloqueo al perder el foco, F30 marca de agua, F31 progreso) en paralelo; F32 (incidentes) al final |
+| **4** (catálogo y préstamos, 8) | Carril catálogo: F18, F19, F20, F21, F22 ∥ carril préstamos: F23, F24, F26 | Dos carriles independientes. F22 incluye el ISBN-10 con «X» final. F26 puede adelantar una pieza para F24 |
+| **5** (opcional, 2) | F9 (panel por mes), F25 (reservas) | Se decide al final |
+
+**Para arrancar la sesión:** (1) hacer el push de `30cb422` si la persona lo pide (hay commits locales de F15 y F36 sin subir); (2) recordar sus pruebas pendientes en Vercel (comprobación manual de F15 con dos navegadores, revisión visual de la barra y de las pantallas nuevas); (3) preguntar si revocar los tokens de Firebase al desactivar una cuenta (F14); (4) escribir las specs de F27 y, si la persona lo aprueba, la de los dos carriles de la Ola 4 juntas para construirlos en paralelo.
+
 ## Pendientes del proyecto (borra cada uno al cerrarlo; si surge uno nuevo, añádelo aquí)
 Al empezar una sesión, recuérdale a la persona lo que siga abierto y pregunta por dónde quiere seguir.
 
