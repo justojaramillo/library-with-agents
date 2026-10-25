@@ -12,7 +12,7 @@
 
 **F5–F8 (préstamos físicos) construido** (spec `docs/specs/F5-F8-prestamos-fisicos.md` aprobada, revisión de `security` hecha, nota en `docs/handoffs/F5-F8-prestamos-fisicos.md`; `check:full` en verde, 568 pruebas). Falta la persona: probarlo cuando se despliegue.
 
-**Siguiente paso (el anterior ya está hecho; queda lo de las pantallas):** Ola 1 de préstamos. Empezar escribiendo la spec de **F5 (prestar un libro físico)** con la skill `write-spec` para que la persona la apruebe; después F6–F8 y las pantallas F34–F35. Plan de paralelismo: 2 agentes de backend (servicio y reglas / repositorio y rutas) y 2 de frontend, con la tabla «Interfaz de módulos» fijada en la spec antes de delegar.
+**Siguiente paso:** escribir con `write-spec` la spec de las pantallas F34–F35 (`/prestamos`, `/mis-prestamos`, `/mis-vencidos`) para que la persona la apruebe; luego 2 agentes de frontend en paralelo (personal / prestatario). Último commit de código: F5–F8 (`29894d9`, aún sin push).
 
 ## Pendientes del proyecto (borra cada uno al cerrarlo; si surge uno nuevo, añádelo aquí)
 Al empezar una sesión, recuérdale a la persona lo que siga abierto y pregunta por dónde quiere seguir.
@@ -33,4 +33,4 @@ Al empezar una sesión, recuérdale a la persona lo que siga abierto y pregunta 
 - [ ] Repetir la **prueba de reconstrucción en una carpeta vacía** (`docs/bootstrap.md`) cuando haya más features, para ver si los docs siguen siendo suficientes.
 
 ### Próximas features
-- [ ] **Ola 1:** spec y construcción de las pantallas F34 (`/prestamos`) y F35 (`/mis-prestamos`, `/mis-vencidos`). Después Ola 2 (cuentas: autorregistro, docente, recuperar contraseña con Firebase) y Ola 3 (lector con Markdown en Vercel Blob). Faltan las specs de F5–F38.
+- [ ] **Ola 1:** spec y construcción de las pantallas F34 (`/prestamos`) y F35 (`/mis-prestamos`, `/mis-vencidos`). Después Ola 2 (cuentas: autorregistro, docente, recuperar contraseña con Firebase) y Ola 3 (lector con Markdown en Vercel Blob). Faltan las specs de F9–F32 y F34–F38.
