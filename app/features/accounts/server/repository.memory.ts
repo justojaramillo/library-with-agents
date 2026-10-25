@@ -1,6 +1,6 @@
 import type { Id, Role } from "@/shared/schema";
 import { ConflictError } from "@/shared/server/errors";
-import { comparePageOrder, unknownCursorError } from "./member-paging";
+import { comparePageOrder, compareByNameThenId, unknownCursorError } from "./member-paging";
 import { matchesMemberQuery, passesLendable, sortAndLimit } from "./member-search";
 import type { MemberRecord, MemberRepository } from "./repository";
 import type { MemberRoleStore } from "./teacher-request-repository";
@@ -50,6 +50,24 @@ class MemoryMembers implements MemberRepository, MemberRoleStore {
     }
     const window = sorted.slice(start, start + limit + 1);
     return { members: window.slice(0, limit).map((member) => ({ ...member })), hasMore: window.length > limit };
+  }
+
+  async setActive(id: Id, active: boolean) {
+    const row = this.rows.get(id);
+    if (row === undefined) {
+      return undefined;
+    }
+    const updated = { ...row, active };
+    this.rows.set(id, updated);
+    return { ...updated };
+  }
+
+  async listByRoles(roles: Role[], limit: number) {
+    return [...this.rows.values()]
+      .filter((member) => roles.includes(member.role))
+      .sort(compareByNameThenId)
+      .slice(0, limit)
+      .map((member) => ({ ...member }));
   }
 
   /** Solo para el repositorio de solicitudes en memoria (F12): cambia el rol sin pasar por el puerto público. */

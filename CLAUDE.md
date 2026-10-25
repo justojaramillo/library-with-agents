@@ -26,7 +26,9 @@
 
 **F37 parte 1 (pantalla `/solicitudes`) construido** (spec `docs/specs/F37-pantalla-de-solicitudes-de-docente.md` aprobada, nota en `docs/handoffs/F37-pantalla-de-solicitudes-de-docente.md`; `check:full` en verde, 2662 pruebas, `security` Aprobado sin críticos, altos ni medios). `/personal` (parte 2) espera a F13–F14. Commit local, sin push.
 
-**Siguiente paso:** seguir la Ola 2 en orden: F13–F14 (bibliotecarios, desactivar cuentas), F15 (cambiar contraseña), F36 (formularios) y la parte 2 de F37 (`/personal`). Escribir cada spec con `write-spec` y esperar su aprobación. F5–F8, F34–F35, S1 y F10+F16+F17 ya están en `main`.
+**F13 + F14 (bibliotecarios, desactivar/reactivar cuentas) y parte 2 de F37 (`/personal`) construido** (spec `docs/specs/F13-F14-bibliotecarios-y-desactivar-cuentas.md` aprobada, nota en `docs/handoffs/F13-F14-bibliotecarios-y-desactivar-cuentas.md`; `check:full` en verde, 3218 pruebas, `security` Aprobado sin críticos, altos ni medios). Commit local, sin push.
+
+**Siguiente paso:** seguir la Ola 2 en orden: F15 (cambiar mi contraseña) y F36 (formularios para registrar libros y cuentas de mostrador); con eso se cierra la Ola 2. Escribir cada spec con `write-spec` y esperar su aprobación. F5–F8, F34–F35, S1, F10+F11+F12+F16+F17 y F37 (parte 1) ya están en `main`.
 
 ## Pendientes del proyecto (borra cada uno al cerrarlo; si surge uno nuevo, añádelo aquí)
 Al empezar una sesión, recuérdale a la persona lo que siga abierto y pregunta por dónde quiere seguir.
@@ -53,7 +55,8 @@ Al empezar una sesión, recuérdale a la persona lo que siga abierto y pregunta 
 
 - [ ] **De F11–F12 (`docs/handoffs/F11-F12-solicitud-de-docente.md`):** antes de cualquier «cambiar correo», comprobar que el correo verificado en Firebase es el de `members.email`; revisión visual de `/docente` y `/solicitudes` a 360/768/1024 px; pruebas del adaptador `identity.firebase.ts` y del repositorio Firestore de solicitudes (emulador).
 - [ ] **De F37 (`docs/handoffs/F37-pantalla-de-solicitudes-de-docente.md`):** decidir si se amplía la lista de caracteres ocultos de `note`/`reason` (U+061C, U+3164, U+2800…) y filtrar también el nombre de la cuenta (F13 o similar); pruebas de navegador para lo interactivo.
+- [ ] **De F13–F14 (`docs/handoffs/F13-F14-bibliotecarios-y-desactivar-cuentas.md`):** probar en Vercel el flujo de bibliotecarios y que un desactivado pierde la sesión en su siguiente petición; revisión visual de `/personal` y `/cuentas` a 360/768/1024 px; decidir si desactivar revoca los tokens de Firebase (hoy una cookie vieja vuelve a valer si se reactiva antes de 8 h) y si se limita la tasa de `POST /api/staff` y del `PATCH`; mover la matriz dentro de la transacción si algún día se cambian roles de personal por la web; prueba del repositorio de Firestore con el emulador.
 - [ ] **De F34–F35 (`docs/handoffs/F34-F35-pantallas-de-prestamos.md`):** ejecutar `backfill:members` en el Firebase real; revisión visual de las tres pantallas a 360/768/1024 px y de la paginación de `/cuentas`; paginar `/prestamos`; recalcular `search_keys` al editar nombre o correo (F13 o similar); pruebas de navegador para lo interactivo.
 
 ### Próximas features
-- [ ] **Ola 2** (siguiente; cuentas: F10–F17 y F36–F37), luego Ola 3 (lector con Markdown en Vercel Blob: F27–F32 y F38), Ola 4 (F18–F22, F23, F24, F26) y Ola 5 opcional (F9, F25). Llevamos 17 de 39 features (con F10–F12, F16 y F17); faltan las specs de F9, F13–F15, F18–F32 y F36–F38.
+- [ ] **Ola 2** (siguiente; cuentas: F10–F17 y F36–F37), luego Ola 3 (lector con Markdown en Vercel Blob: F27–F32 y F38), Ola 4 (F18–F22, F23, F24, F26) y Ola 5 opcional (F9, F25). Llevamos 19 de 39 features (con F10–F14, F16, F17 y F37); faltan las specs de F9, F15, F18–F32, F36 y F38.

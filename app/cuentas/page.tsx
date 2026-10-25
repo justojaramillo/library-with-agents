@@ -71,7 +71,7 @@ async function AccountsContent({ searchParams }: { searchParams: AccountsSearchP
   }
   return (
     <>
-      <AccountList members={page.members} />
+      <AccountList members={page.members} actor={{ role: user.role, id: user.member_id }} />
       <AccountPagination nextAfter={page.next_after} hasCursor={after !== undefined} />
     </>
   );

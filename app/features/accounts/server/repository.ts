@@ -39,4 +39,15 @@ export interface MemberRepository {
    * `truncated` es `true` si se leyeron los 200 documentos del tope (puede haber más); en memoria siempre `false`.
    */
   search(q: string, limit: number, lendable: boolean): Promise<MemberSearchResult>;
+  /**
+   * F14 · Actualiza SOLO el campo `active` de la cuenta (no toca `search_keys` ni otros campos). Devuelve la cuenta
+   * ya actualizada, o `undefined` si no existe.
+   */
+  setActive(id: Id, active: boolean): Promise<MemberRecord | undefined>;
+  /**
+   * F13 · Hasta `limit` cuentas cuyo rol está en `roles`, ordenadas por nombre y luego por id. En Firestore la consulta
+   * es `role in [...]` con `limit` y SIN orden (así no necesita índice compuesto) y se ordena después: si hubiera más de
+   * `limit` cuentas con esos roles, el corte sería arbitrario (la spec fija 200 y el personal es poco).
+   */
+  listByRoles(roles: Role[], limit: number): Promise<MemberRecord[]>;
 }

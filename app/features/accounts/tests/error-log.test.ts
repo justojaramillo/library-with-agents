@@ -231,6 +231,8 @@ describe("rollbackIdentity · la compensación registra con la descripción reco
       existsWithRole: (role) => inner.existsWithRole(role),
       list: (limit, after) => inner.list(limit, after),
       search: (q, limit, lendable) => inner.search(q, limit, lendable),
+      setActive: (id, active) => inner.setActive(id, active),
+      listByRoles: (roles, limit) => inner.listByRoles(roles, limit),
     };
   }
 

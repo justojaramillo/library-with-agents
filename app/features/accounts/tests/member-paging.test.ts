@@ -288,6 +288,8 @@ function truncatingRepository(inner: MemberRepository): MemberRepository {
     findByEmail: (email) => inner.findByEmail(email),
     existsWithRole: (role) => inner.existsWithRole(role),
     list: (limit, after) => inner.list(limit, after),
+    setActive: (id, active) => inner.setActive(id, active),
+    listByRoles: (roles, limit) => inner.listByRoles(roles, limit),
     search: async (q, limit, lendable) => {
       const found = await inner.search(q, limit, lendable);
       return { members: found.members, truncated: true };

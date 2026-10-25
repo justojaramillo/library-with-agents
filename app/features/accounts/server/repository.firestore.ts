@@ -3,7 +3,7 @@ import { FieldPath, type DocumentSnapshot, type Firestore } from "firebase-admin
 import { COLLECTIONS } from "@/shared/server/collections";
 import { ConflictError } from "@/shared/server/errors";
 import { MemberSchema } from "../schema";
-import { unknownCursorError } from "./member-paging";
+import { compareByNameThenId, unknownCursorError } from "./member-paging";
 import { buildSearchKeys, longestQueryWord, matchesMemberQuery, passesLendable, sortAndLimit } from "./member-search";
 import type { MemberRecord, MemberRepository } from "./repository";
 
@@ -110,6 +110,28 @@ export function createFirestoreMemberRepository(db: Firestore): MemberRepository
       }
       const result = await query.get();
       return { members: result.docs.slice(0, limit).map(toRecord), hasMore: result.docs.length > limit };
+    },
+    async setActive(id, active) {
+      const valid = MemberSchema.shape.active.parse(active);
+      const ref = members.doc(id);
+      return db.runTransaction(async (transaction) => {
+        const snapshot = await transaction.get(ref);
+        if (!snapshot.exists) {
+          return undefined;
+        }
+        const current = toRecord(snapshot);
+        transaction.update(ref, { active: valid });
+        return { ...current, active: valid };
+      });
+    },
+    async listByRoles(roles, limit) {
+      if (roles.length === 0) {
+        return [];
+      }
+      // Sin orderBy a propósito (no requiere índice compuesto). Con más de `limit` cuentas el corte sería arbitrario;
+      // la spec fija 200 y el personal es mucho menor.
+      const result = await members.where("role", "in", roles).limit(limit).get();
+      return result.docs.map(toRecord).sort(compareByNameThenId);
     },
     async search(q, limit, lendable) {
       const key = longestQueryWord(q);

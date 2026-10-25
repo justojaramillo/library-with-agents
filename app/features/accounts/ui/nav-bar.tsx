@@ -39,8 +39,17 @@ function StaffLinks({ role }: { role: Role }) {
       <NavItem href="/prestamos" label="Préstamos" />
       <NavItem href="/cuentas" label="Cuentas" />
       <NavItem href="/solicitudes" label="Solicitudes" />
+      <AdminLinks role={role} />
     </>
   );
+}
+
+/** F13 · «Personal» solo para el administrador; el bibliotecario no lo ve. */
+function AdminLinks({ role }: { role: Role }) {
+  if (role !== "ADMINISTRADOR") {
+    return null;
+  }
+  return <NavItem href="/personal" label="Personal" />;
 }
 
 /** F11 · Regla 18: quien aún no es docente ve «Ser docente»; quien ya lo es, «Mi rol de docente». */
@@ -84,7 +93,7 @@ function SessionArea({ user }: { user: NavBarUser | null }) {
   );
 }
 
-/** Barra principal: «Biblioteca» siempre, «Préstamos», «Cuentas» y «Solicitudes» (sin contador) al personal, «Mis préstamos», «Mis vencidos» y «Ser docente»/«Mi rol de docente» a quien pide prestado, y el área de sesión a la derecha. */
+/** Barra principal: «Biblioteca» siempre, «Préstamos», «Cuentas» y «Solicitudes» (sin contador) al personal, «Personal» solo al administrador, «Mis préstamos», «Mis vencidos» y «Ser docente»/«Mi rol de docente» a quien pide prestado, y el área de sesión a la derecha. */
 export function NavBar({ user }: { user: NavBarUser | null }) {
   const role = user?.role;
   return (

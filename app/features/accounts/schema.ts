@@ -41,6 +41,17 @@ export const ProvisionMemberInputSchema = MemberBaseSchema.extend({
 });
 export type ProvisionMemberInput = z.infer<typeof ProvisionMemberInputSchema>;
 
+/**
+ * F13 · Crear una cuenta de bibliotecario — entrada (solo el administrador). El rol NO viaja en el cuerpo: el servicio
+ * lo fija en `BIBLIOTECARIO`; cualquier campo extra (también `role`) se ignora.
+ */
+export const CreateStaffInputSchema = MemberBaseSchema;
+export type CreateStaffInput = z.infer<typeof CreateStaffInputSchema>;
+
+/** F14 · Desactivar o reactivar una cuenta — entrada de `PATCH /api/members/:id/active`. */
+export const SetMemberActiveInputSchema = z.object({ active: z.boolean() });
+export type SetMemberActiveInput = z.infer<typeof SetMemberActiveInputSchema>;
+
 /** Lo que se devuelve al exterior: NUNCA incluye el hash de la contraseña. */
 export const MemberSchema = z.object({
   id: IdSchema,

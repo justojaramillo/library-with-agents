@@ -5,6 +5,7 @@ import { createFirebaseIdentityProvider } from "@/features/accounts/server/ident
 import { createMemberService } from "@/features/accounts/server/member-service";
 import { createFirestoreMemberRepository } from "@/features/accounts/server/repository.firestore";
 import { createFirestoreTeacherRequestRepository } from "@/features/accounts/server/teacher-request-repository.firestore";
+import { createStaffService } from "@/features/accounts/server/staff-service";
 import { createTeacherRequestService } from "@/features/accounts/server/teacher-request-service";
 import { BOOKS_CACHE_TAG, registerBookSearch, searchBooksCached } from "@/features/catalog/server/book-search-cache";
 import { normalizeBookText } from "@/features/catalog/server/book-search";
@@ -28,6 +29,7 @@ function build() {
   const memberRepository = createFirestoreMemberRepository(db);
   const loanRepository = createFirestoreLoanRepository(db);
   const memberService = createMemberService({ members: memberRepository, identity });
+  const staffService = createStaffService({ members: memberRepository, provision: memberService.provision });
   const bookService = createBookService({ books: bookRepository, loans: loanRepository });
   // La función cacheada llama al servicio real a través de este registro (ADR-0008).
   registerBookSearch(bookService.search);
@@ -51,6 +53,9 @@ function build() {
     },
     // Alta con cualquier rol: solo para el seed y F13 (administración); ninguna ruta debe usarlo.
     admin: { provision: memberService.provision },
+    // F13–F14 · Bibliotecarios y activar/desactivar cuentas (el servicio comprueba al actor). Se copian uno a uno
+    // para que `provision` siga sin ser alcanzable desde las rutas.
+    staff: { create: staffService.create, list: staffService.list, setActive: staffService.setActive },
     auth: createAuthService({ members: memberRepository, identity }),
     // F11–F12 · Solicitud del rol de docente (el servicio comprueba el rol del actor; las rutas solo exigen sesión).
     teacherRequests: createTeacherRequestService({
