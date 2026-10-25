@@ -1,6 +1,6 @@
 import type { Auth } from "firebase-admin/auth";
 import { ConflictError } from "@/shared/server/errors";
-import { describeAuthError, isExpectedAuthError } from "@/shared/server/security/firebase-errors";
+import { describeAuthError, firebaseErrorCode, isExpectedAuthError } from "@/shared/server/security/firebase-errors";
 import type { IdentityProvider } from "./identity";
 
 /** Traduce `auth/email-already-exists` a `ConflictError`; cualquier otro error se relanza. */
@@ -39,5 +39,18 @@ export function createFirebaseIdentityProvider(auth: Auth): IdentityProvider {
       }
     },
     createSessionCookie: (idToken, ttlSeconds) => auth.createSessionCookie(idToken, { expiresIn: ttlSeconds * 1000 }),
+    async isEmailVerified(uid) {
+      try {
+        const user = await auth.getUser(uid);
+        return user.emailVerified;
+      } catch (error) {
+        // Usuario inexistente → no verificado; cualquier otro fallo es de infraestructura y se relanza.
+        if (firebaseErrorCode(error) === "auth/user-not-found") {
+          return false;
+        }
+        console.error("Fallo de infraestructura al leer la verificación del correo:", describeAuthError(error));
+        throw error;
+      }
+    },
   };
 }

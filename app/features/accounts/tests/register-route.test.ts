@@ -530,6 +530,7 @@ describe("F10 · atomicidad: si guardar el documento falla (regla 5)", () => {
       },
       verifyIdToken: (token: string) => world.identity.verifyIdToken(token),
       createSessionCookie: (token: string, ttl: number) => world.identity.createSessionCookie(token, ttl),
+      isEmailVerified: async () => false,
     };
     holder.service = createMemberService({ members: failingCreate(world.repos.members), identity });
 

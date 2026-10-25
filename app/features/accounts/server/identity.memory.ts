@@ -9,12 +9,17 @@ export type MemoryIdentityProvider = IdentityProvider & {
   signIn(email: string, password: string): Promise<string | null>;
   /** Simula `verifySessionCookie` del SDK de administración: `{ uid }` si la cookie la emitió este proveedor. */
   verifySessionCookie(cookie: string): Promise<{ uid: string } | null>;
+  /** Simula que la persona pulsó el enlace de verificación de Firebase. */
+  markEmailVerified(uid: string): void;
+  /** Simula que el correo vuelve a estar sin verificar (p. ej. cambió de correo). */
+  markEmailUnverified(uid: string): void;
 };
 
 class MemoryIdentity implements MemoryIdentityProvider {
   private readonly users = new Map<string, StoredUser>();
   private readonly idTokens = new Map<string, string>();
   private readonly cookies = new Map<string, string>();
+  private readonly verified = new Set<string>();
   private counter = 0;
 
   async createUser({ email, password, name }: StoredUser) {
@@ -32,6 +37,19 @@ class MemoryIdentity implements MemoryIdentityProvider {
 
   async deleteUser(uid: string) {
     this.users.delete(uid);
+    this.verified.delete(uid);
+  }
+
+  async isEmailVerified(uid: string) {
+    return this.users.has(uid) && this.verified.has(uid);
+  }
+
+  markEmailVerified(uid: string) {
+    this.verified.add(uid);
+  }
+
+  markEmailUnverified(uid: string) {
+    this.verified.delete(uid);
   }
 
   async verifyIdToken(idToken: string) {

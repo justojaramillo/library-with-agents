@@ -7,6 +7,7 @@ export const RATE_LIMITS = {
   memberSearch: { limit: 30, windowMs: 60_000 },
   register: { limit: 10, windowMs: 3_600_000 },
   login: { limit: 30, windowMs: 60_000 },
+  teacherRequest: { limit: 5, windowMs: 3_600_000 },
 };
 
 type Window = { count: number; resetAt: number };

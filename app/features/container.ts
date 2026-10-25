@@ -4,6 +4,8 @@ import { createAuthService } from "@/features/accounts/server/auth-service";
 import { createFirebaseIdentityProvider } from "@/features/accounts/server/identity.firebase";
 import { createMemberService } from "@/features/accounts/server/member-service";
 import { createFirestoreMemberRepository } from "@/features/accounts/server/repository.firestore";
+import { createFirestoreTeacherRequestRepository } from "@/features/accounts/server/teacher-request-repository.firestore";
+import { createTeacherRequestService } from "@/features/accounts/server/teacher-request-service";
 import { BOOKS_CACHE_TAG, registerBookSearch, searchBooksCached } from "@/features/catalog/server/book-search-cache";
 import { normalizeBookText } from "@/features/catalog/server/book-search";
 import { createBookService } from "@/features/catalog/server/book-service";
@@ -50,6 +52,12 @@ function build() {
     // Alta con cualquier rol: solo para el seed y F13 (administración); ninguna ruta debe usarlo.
     admin: { provision: memberService.provision },
     auth: createAuthService({ members: memberRepository, identity }),
+    // F11–F12 · Solicitud del rol de docente (el servicio comprueba el rol del actor; las rutas solo exigen sesión).
+    teacherRequests: createTeacherRequestService({
+      requests: createFirestoreTeacherRequestRepository(db),
+      members: memberRepository,
+      identity,
+    }),
     loans: createLoanService({
       books: bookRepository,
       members: memberRepository,

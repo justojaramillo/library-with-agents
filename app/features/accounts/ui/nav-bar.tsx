@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BORROWER_ROLES, STAFF_ROLES, type Role } from "@/shared/schema";
+import { BORROWER_ROLES, STAFF_ROLES, type BorrowerRole, type Role } from "@/shared/schema";
 import { LogoutButton } from "./logout-button";
 import { ROLE_LABELS } from "./role-labels";
 
@@ -16,7 +16,7 @@ function isStaff(role: Role): boolean {
   return (STAFF_ROLES as readonly Role[]).includes(role);
 }
 
-function isBorrower(role: Role): boolean {
+function isBorrower(role: Role): role is BorrowerRole {
   return (BORROWER_ROLES as readonly Role[]).includes(role);
 }
 
@@ -42,6 +42,13 @@ function StaffLinks({ role }: { role: Role }) {
   );
 }
 
+/** F11 · Regla 18: quien aún no es docente ve «Ser docente»; quien ya lo es, «Mi rol de docente». */
+const TEACHER_LINK_LABELS: Record<BorrowerRole, string> = {
+  EXTERNO: "Ser docente",
+  ESTUDIANTE: "Ser docente",
+  DOCENTE: "Mi rol de docente",
+};
+
 function BorrowerLinks({ role }: { role: Role }) {
   if (!isBorrower(role)) {
     return null;
@@ -50,6 +57,7 @@ function BorrowerLinks({ role }: { role: Role }) {
     <>
       <NavItem href="/mis-prestamos" label="Mis préstamos" />
       <NavItem href="/mis-vencidos" label="Mis vencidos" />
+      <NavItem href="/docente" label={TEACHER_LINK_LABELS[role]} />
     </>
   );
 }
@@ -75,7 +83,7 @@ function SessionArea({ user }: { user: NavBarUser | null }) {
   );
 }
 
-/** Barra principal: «Biblioteca» siempre, «Préstamos» y «Cuentas» al personal, «Mis préstamos» y «Mis vencidos» a quien pide prestado, y el área de sesión a la derecha. */
+/** Barra principal: «Biblioteca» siempre, «Préstamos» y «Cuentas» al personal, «Mis préstamos», «Mis vencidos» y «Ser docente»/«Mi rol de docente» a quien pide prestado, y el área de sesión a la derecha. */
 export function NavBar({ user }: { user: NavBarUser | null }) {
   const role = user?.role;
   return (

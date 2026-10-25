@@ -6,7 +6,13 @@ import { useState } from "react";
 // Primero: fija Zod sin compilación antes de que `../schema` cree sus esquemas (CSP).
 import "@/shared/ui/client-setup";
 import { type CreateMemberInput, CreateMemberInputSchema } from "../schema";
-import { closeClientSession, loginWithIdToken, readErrorMessage, signInAndGetIdToken } from "./auth-client";
+import {
+  closeClientSession,
+  loginWithIdToken,
+  readErrorMessage,
+  sendVerificationToSignedInUser,
+  signInAndGetIdToken,
+} from "./auth-client";
 
 const DEFAULT_ERROR = "No se pudo crear la cuenta";
 const INVALID_DATA_ERROR = "Revisa los datos: nombre, un correo válido y una contraseña de 8 a 100 caracteres.";
@@ -37,10 +43,20 @@ async function rejectionFrom(res: Response): Promise<Outcome> {
   return failure(await readErrorMessage(res, DEFAULT_ERROR));
 }
 
+/** Regla 3 de F11: el correo de verificación es un extra; si no sale, el registro sigue y se podrá reenviar en /docente. */
+async function trySendVerification(): Promise<void> {
+  try {
+    await sendVerificationToSignedInUser();
+  } catch {
+    // Se omite: el reenvío está en /docente.
+  }
+}
+
 /** Ingresa tras el registro; si algo falla, la cuenta ya existe y solo falta ingresar a mano. */
 async function signInAfterRegister(input: CreateMemberInput): Promise<Outcome> {
   try {
     const idToken = await signInAndGetIdToken(input.email, input.password);
+    await trySendVerification();
     const res = await loginWithIdToken(idToken);
     if (res.ok) {
       return OK;

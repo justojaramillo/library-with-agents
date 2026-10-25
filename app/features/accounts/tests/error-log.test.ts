@@ -124,6 +124,7 @@ describe("rollbackIdentity · la compensación registra con la descripción reco
         createUser: (input) => identity.createUser(input),
         verifyIdToken: (token) => identity.verifyIdToken(token),
         createSessionCookie: (token, ttl) => identity.createSessionCookie(token, ttl),
+        isEmailVerified: async () => false,
         deleteUser: async () => Promise.reject(deleteError),
       },
     });

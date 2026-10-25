@@ -6,5 +6,6 @@ export const COLLECTIONS = {
   members: "members",
   books: "books",
   loans: "loans",
+  teacherRequests: "teacher_requests",
   meta: "meta",
 } as const;

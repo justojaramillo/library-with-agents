@@ -1,0 +1,10 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "teacher_requests",
+      "queryScope": "COLLECTION",
+      "fields": [{ "fieldPath": "status", "order": "ASCENDING" }, { "fieldPath": "requested_at", "order": "ASCENDING" }]
+    }
+  ],
+  "fieldOverrides": []
+}

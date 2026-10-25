@@ -3,8 +3,9 @@ import { ConflictError } from "@/shared/server/errors";
 import { comparePageOrder, unknownCursorError } from "./member-paging";
 import { matchesMemberQuery, passesLendable, sortAndLimit } from "./member-search";
 import type { MemberRecord, MemberRepository } from "./repository";
+import type { MemberRoleStore } from "./teacher-request-repository";
 
-class MemoryMembers implements MemberRepository {
+class MemoryMembers implements MemberRepository, MemberRoleStore {
   private readonly rows = new Map<Id, MemberRecord>();
 
   async create(record: MemberRecord) {
@@ -51,6 +52,14 @@ class MemoryMembers implements MemberRepository {
     return { members: window.slice(0, limit).map((member) => ({ ...member })), hasMore: window.length > limit };
   }
 
+  /** Solo para el repositorio de solicitudes en memoria (F12): cambia el rol sin pasar por el puerto público. */
+  async setRole(id: Id, role: Role) {
+    const row = this.rows.get(id);
+    if (row) {
+      this.rows.set(id, { ...row, role });
+    }
+  }
+
   async search(q: string, limit: number, lendable: boolean) {
     const found = [...this.rows.values()]
       .filter((member) => matchesMemberQuery(member, q))
@@ -61,6 +70,6 @@ class MemoryMembers implements MemberRepository {
 }
 
 /** Repositorio en memoria: rápido y sin red; se usa en las pruebas unitarias. El `id` es el uid recibido. */
-export function createMemoryMemberRepository(): MemberRepository {
+export function createMemoryMemberRepository(): MemberRepository & MemberRoleStore {
   return new MemoryMembers();
 }

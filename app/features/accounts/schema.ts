@@ -93,3 +93,75 @@ export const ForgotPasswordInputSchema = z.object({
   email: z.string().trim().toLowerCase().max(254).pipe(z.email()),
 });
 export type ForgotPasswordInput = z.infer<typeof ForgotPasswordInputSchema>;
+
+/** F11–F12 · Reglas de la solicitud del rol de docente (`docs/specs/F11-F12-solicitud-de-docente.md`). */
+export const TEACHER_REQUEST_RULES = {
+  noteMin: 10,
+  noteMax: 500,
+  reasonMax: 300,
+  retryAfterDays: 7,
+} as const;
+
+export const TeacherRequestStatusSchema = z.enum(["PENDIENTE", "APROBADA", "RECHAZADA"]);
+export type TeacherRequestStatus = z.infer<typeof TeacherRequestStatusSchema>;
+
+/** F11 · Solicitar el rol de docente — entrada. La identidad sale de la sesión; cualquier otro campo se ignora. */
+export const CreateTeacherRequestInputSchema = z.object({
+  note: z.string().trim().min(TEACHER_REQUEST_RULES.noteMin).max(TEACHER_REQUEST_RULES.noteMax),
+});
+export type CreateTeacherRequestInput = z.infer<typeof CreateTeacherRequestInputSchema>;
+
+function emptyToUndefined(value: string): string | undefined {
+  if (value === "") {
+    return undefined;
+  }
+  return value;
+}
+
+/** F12 · Rechazar una solicitud — entrada. `reason` es opcional; `""` (tras recortar) equivale a ausente. */
+export const RejectTeacherRequestInputSchema = z.object({
+  reason: z.string().trim().max(TEACHER_REQUEST_RULES.reasonMax).transform(emptyToUndefined).optional(),
+});
+export type RejectTeacherRequestInput = z.infer<typeof RejectTeacherRequestInputSchema>;
+
+/** Una solicitud por persona (el id del documento es `member_id`). Las fechas son ISO; `decided_*` y `reason` son `null` mientras esté pendiente. */
+export const TeacherRequestSchema = z.object({
+  member_id: IdSchema,
+  note: z.string(),
+  status: TeacherRequestStatusSchema,
+  requested_at: z.string(),
+  decided_at: z.string().nullable(),
+  decided_by: IdSchema.nullable(),
+  reason: z.string().nullable(),
+});
+export type TeacherRequest = z.infer<typeof TeacherRequestSchema>;
+
+/** F12 · Elemento del listado del personal: la solicitud más datos de la cuenta leídos al listar. */
+export const TeacherRequestItemSchema = TeacherRequestSchema.extend({
+  member_name: z.string(),
+  member_email: z.string(),
+  member_role: RoleSchema,
+  email_verified: z.boolean(),
+});
+export type TeacherRequestItem = z.infer<typeof TeacherRequestItemSchema>;
+
+/** F12 · `GET /api/teacher-requests?status=&limit=&after=` — orden por `requested_at` y luego id; `after` es el `member_id` de la última. */
+export const ListTeacherRequestsQuerySchema = z.object({
+  status: TeacherRequestStatusSchema.default("PENDIENTE"),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  after: IdSchema.optional(),
+});
+export type ListTeacherRequestsQuery = z.infer<typeof ListTeacherRequestsQuerySchema>;
+
+export const TeacherRequestPageSchema = z.object({
+  requests: z.array(TeacherRequestItemSchema),
+  next_after: IdSchema.nullable(),
+});
+export type TeacherRequestPage = z.infer<typeof TeacherRequestPageSchema>;
+
+/** F11 · `GET /api/me/teacher-request` — la solicitud propia (o `null`) y si el correo está verificado. */
+export const MyTeacherRequestSchema = z.object({
+  request: TeacherRequestSchema.nullable(),
+  email_verified: z.boolean(),
+});
+export type MyTeacherRequest = z.infer<typeof MyTeacherRequestSchema>;

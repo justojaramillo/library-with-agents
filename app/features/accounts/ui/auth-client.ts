@@ -1,4 +1,4 @@
-import { signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { sendEmailVerification, signInWithEmailAndPassword, signOut } from "firebase/auth";
 // Primero: fija Zod sin compilación antes de que `@/shared/schema` cree sus esquemas (CSP).
 import "@/shared/ui/client-setup";
 import { ApiErrorSchema } from "@/shared/schema";
@@ -17,6 +17,31 @@ export async function closeClientSession(): Promise<void> {
     await signOut(getClientAuth());
   } catch {
     // Nada que cerrar o fallo local: no afecta a la cookie del servidor.
+  }
+}
+
+/**
+ * F11 · Envía el correo de verificación a la cuenta que ya tiene sesión en el SDK de cliente
+ * (justo después de registrarse, antes de cerrarla). Puede fallar: quien llama decide qué hacer.
+ */
+export async function sendVerificationToSignedInUser(): Promise<void> {
+  const user = getClientAuth().currentUser;
+  if (user === null) {
+    return;
+  }
+  await sendEmailVerification(user);
+}
+
+/**
+ * F11 · Reenvío: inicia sesión con el SDK, envía el correo de verificación y cierra la sesión del SDK.
+ * Los errores de Firebase (`auth/wrong-password`, `auth/too-many-requests`…) suben a quien llama.
+ */
+export async function sendVerificationEmail(email: string, password: string): Promise<void> {
+  try {
+    await signInWithEmailAndPassword(getClientAuth(), email, password);
+    await sendVerificationToSignedInUser();
+  } finally {
+    await closeClientSession();
   }
 }
 

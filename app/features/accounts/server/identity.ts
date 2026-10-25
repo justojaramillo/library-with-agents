@@ -12,4 +12,6 @@ export interface IdentityProvider {
   verifyIdToken(idToken: string): Promise<{ uid: string } | null>;
   /** Cambia un ID token reciente por una cookie de sesión con esa vigencia. */
   createSessionCookie(idToken: string, ttlSeconds: number): Promise<string>;
+  /** F11 · `true` si Firebase Authentication tiene el correo de la cuenta verificado; `false` si no o si el usuario no existe. Se lee en cada llamada. */
+  isEmailVerified(uid: string): Promise<boolean>;
 }
