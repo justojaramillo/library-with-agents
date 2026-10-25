@@ -40,7 +40,7 @@ export default function NewMemberPage() {
         <NewMemberContent />
       </Suspense>
       <p>
-        <Link href="/cuentas" className="inline-flex min-h-11 items-center font-medium underline underline-offset-4">
+        <Link href="/cuentas" className="inline-flex min-h-11 items-center font-medium">
           Volver a cuentas
         </Link>
       </p>

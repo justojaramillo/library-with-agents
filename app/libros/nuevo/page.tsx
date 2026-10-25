@@ -40,7 +40,7 @@ export default function NewBookPage() {
         <NewBookContent />
       </Suspense>
       <p>
-        <Link href="/" className="inline-flex min-h-11 items-center font-medium underline underline-offset-4">
+        <Link href="/" className="inline-flex min-h-11 items-center font-medium">
           Volver al catálogo
         </Link>
       </p>

@@ -17,8 +17,7 @@ const SUCCESS_MESSAGE =
 const ERROR_ID = "recuperar-error";
 const STATUS_ID = "recuperar-estado";
 const INPUT_CLASS = "min-h-11 w-full rounded border border-control-border bg-surface px-3 text-ink";
-const LINK_CLASS =
-  "inline-flex min-h-11 items-center font-medium text-primary underline underline-offset-4 hover:text-primary-hover";
+const LINK_CLASS = "inline-flex min-h-11 items-center font-medium text-primary hover:text-primary-hover";
 
 /** Mensaje por código de Firebase; `auth/user-not-found` no está: se trata como éxito (regla 11). */
 const RESET_ERROR_MESSAGES: Readonly<Record<string, string>> = {

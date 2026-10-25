@@ -14,8 +14,9 @@ const TOO_MANY_MESSAGE = "Demasiados intentos. Espera unos minutos o recupera tu
 const TOO_MANY_CODE = "auth/too-many-requests";
 const ERROR_ID = "login-error";
 const INPUT_CLASS = "min-h-11 w-full rounded border border-control-border bg-surface px-3 text-ink";
-const LINK_CLASS =
-  "inline-flex min-h-11 items-center font-medium text-primary underline underline-offset-4 hover:text-primary-hover";
+const LINK_CLASS = "inline-flex min-h-11 items-center font-medium text-primary hover:text-primary-hover";
+/** Enlace dentro de una frase: se subraya para no depender solo del color (WCAG 1.4.1). */
+const INLINE_LINK_CLASS = `${LINK_CLASS} underline underline-offset-4`;
 
 /** Códigos de Firebase que significan «credenciales inválidas»: todos muestran el mismo mensaje (regla 4). */
 const CREDENTIAL_ERROR_CODES: readonly string[] = [
@@ -83,7 +84,7 @@ function RecoveryLink({ show }: { show: boolean }) {
   return (
     <>
       {" "}
-      <Link href="/recuperar" className={LINK_CLASS}>
+      <Link href="/recuperar" className={INLINE_LINK_CLASS}>
         Recuperar contraseña
       </Link>
     </>
