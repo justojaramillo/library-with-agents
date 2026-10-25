@@ -36,9 +36,14 @@ function failingCreate(inner: MemberRepository): MemberRepository {
     findByIds: (ids) => inner.findByIds(ids),
     findByEmail: (email) => inner.findByEmail(email),
     existsWithRole: (role) => inner.existsWithRole(role),
-    list: () => inner.list(),
+    list: (limit, after) => inner.list(limit, after),
     search: (q, limit, lendable) => inner.search(q, limit, lendable),
   };
+}
+
+/** Todas las cuentas (hasta 100) por el servicio, en el orden de la paginación (S1: nombre y luego id). */
+async function listAll(service: { list: World["members"]["list"] }) {
+  return (await service.list({ limit: 100 })).members;
 }
 
 /** Servicio de cuentas cuyo repositorio falla al guardar; comparte la identidad y las cuentas del mundo. */
@@ -86,7 +91,7 @@ describe("F3 · registrar cuenta con rol seleccionable", () => {
     expect(CreateMemberInputSchema.safeParse(input).success).toBe(false);
     expect(await repos.members.findByEmail("intruso@example.com")).toBeUndefined();
     expect(await identity.signIn("intruso@example.com", "clave-segura-123")).toBeNull();
-    expect(await members.list()).toHaveLength(0);
+    expect(await listAll(members)).toHaveLength(0);
   });
 
   it("devuelve un error de validación que señala el campo role para un rol no seleccionable", () => {
@@ -102,7 +107,7 @@ describe("F3 · registrar cuenta con rol seleccionable", () => {
     // @ts-expect-error el rol ADMINISTRADOR no es seleccionable: el servicio debe rechazarlo igualmente
     const attempt = members.register({ ...aMember({ email: "colado@example.com" }), role: "ADMINISTRADOR" });
     await expect(attempt).rejects.toThrow();
-    expect(await members.list()).toHaveLength(0);
+    expect(await listAll(members)).toHaveLength(0);
     expect(await identity.signIn("colado@example.com", "clave-segura-123")).toBeNull();
   });
 
@@ -111,7 +116,7 @@ describe("F3 · registrar cuenta con rol seleccionable", () => {
     // @ts-expect-error el rol DOCENTE no es seleccionable: el servicio debe rechazarlo igualmente
     const attempt = members.register({ ...aMember(), role: "DOCENTE" });
     await expect(attempt).rejects.toThrow();
-    expect(await members.list()).toHaveLength(0);
+    expect(await listAll(members)).toHaveLength(0);
   });
 
   it("guarda el correo en minúsculas", async () => {
@@ -125,7 +130,7 @@ describe("F3 · registrar cuenta con rol seleccionable", () => {
     await members.register(aMember({ email: "a@example.com" }));
     await expect(members.register(aMember({ email: "a@example.com" }))).rejects.toThrow(ConflictError);
     await expect(members.register(aMember({ email: "A@EXAMPLE.COM" }))).rejects.toThrow(ConflictError);
-    expect(await members.list()).toHaveLength(1);
+    expect(await listAll(members)).toHaveLength(1);
   });
 
   it("rechaza un correo ya usado por una cuenta creada con provision", async () => {
@@ -138,7 +143,7 @@ describe("F3 · registrar cuenta con rol seleccionable", () => {
     const { members, identity } = makeWorld();
     await identity.createUser({ email: "huerfano@example.com", password: "otra-clave-123", name: "Huérfano" });
     await expect(members.register(aMember({ email: "huerfano@example.com" }))).rejects.toThrow(ConflictError);
-    expect(await members.list()).toHaveLength(0);
+    expect(await listAll(members)).toHaveLength(0);
   });
 
   it("rechaza con ConflictError en provision un correo que ya existe en la identidad", async () => {
@@ -147,7 +152,7 @@ describe("F3 · registrar cuenta con rol seleccionable", () => {
     await expect(members.provision(aProvisionedMember({ email: "huerfano@example.com" }))).rejects.toThrow(
       ConflictError,
     );
-    expect(await members.list()).toHaveLength(0);
+    expect(await listAll(members)).toHaveLength(0);
   });
 
   it("rechaza un correo con formato inválido", async () => {
@@ -166,7 +171,7 @@ describe("F3 · registrar cuenta con rol seleccionable", () => {
     await expect(members.register(aMember({ password: "a".repeat(100) }))).resolves.toBeDefined();
     await expect(members.register(aMember({ password: "a".repeat(7) }))).rejects.toThrow();
     await expect(members.register(aMember({ password: "a".repeat(101) }))).rejects.toThrow();
-    expect(await members.list()).toHaveLength(2);
+    expect(await listAll(members)).toHaveLength(2);
   });
 
   it("no expone la contraseña en la respuesta de registro", async () => {
@@ -181,7 +186,7 @@ describe("F3 · registrar cuenta con rol seleccionable", () => {
     const { members } = makeWorld();
     await members.register(aMember({ password: "clave-segura-123" }));
     await members.provision(aProvisionedMember({ role: "ADMINISTRADOR", password: "clave-segura-123" }));
-    const listed = await members.list();
+    const listed = await listAll(members);
     expect(listed).toHaveLength(2);
     for (const member of listed) {
       expect(member).not.toHaveProperty("password");
@@ -221,7 +226,7 @@ describe("F3 · compensación si falla guardar la cuenta", () => {
       members.register(aMember({ email: "caida@example.com", password: "clave-segura-123" })),
     ).rejects.toThrow("Firestore caído");
     expect(await world.identity.signIn("caida@example.com", "clave-segura-123")).toBeNull();
-    expect(await world.members.list()).toHaveLength(0);
+    expect(await listAll(world.members)).toHaveLength(0);
   });
 
   it("si guardar la cuenta falla en provision, la identidad creada se borra", async () => {
@@ -292,14 +297,14 @@ describe("F3 · provision crea cuentas con cualquier rol", () => {
     // @ts-expect-error SUPERUSUARIO no es un rol del sistema: el servicio debe rechazarlo igualmente
     const attempt = members.provision({ ...aProvisionedMember(), role: "SUPERUSUARIO" });
     await expect(attempt).rejects.toThrow();
-    expect(await members.list()).toHaveLength(0);
+    expect(await listAll(members)).toHaveLength(0);
   });
 
   it("las cuentas creadas aparecen en la lista", async () => {
     const { members } = makeWorld();
     await members.register(aMember({ email: "uno@example.com" }));
     await members.provision(aProvisionedMember({ email: "dos@example.com", role: "BIBLIOTECARIO" }));
-    expect((await members.list()).map((member) => member.email)).toEqual(["uno@example.com", "dos@example.com"]);
+    expect((await listAll(members)).map((member) => member.email)).toEqual(["uno@example.com", "dos@example.com"]);
   });
 });
 
@@ -318,7 +323,7 @@ describe("F3 · solo puede haber un ADMINISTRADOR", () => {
       members.provision(aProvisionedMember({ email: "admin2@example.com", role: "ADMINISTRADOR" })),
     ).rejects.toThrow(ConflictError);
     expect(await repos.members.findByEmail("admin2@example.com")).toBeUndefined();
-    const listed = await members.list();
+    const listed = await listAll(members);
     expect(listed).toHaveLength(1);
     expect(listed[0]?.email).toBe("admin1@example.com");
   });
@@ -328,7 +333,7 @@ describe("F3 · solo puede haber un ADMINISTRADOR", () => {
     const first = await members.provision(aProvisionedMember({ email: "admin1@example.com", role: "ADMINISTRADOR" }));
     await expect(members.provision(aProvisionedMember({ role: "ADMINISTRADOR" }))).rejects.toThrow(ConflictError);
     await expect(members.provision(aProvisionedMember({ role: "ADMINISTRADOR" }))).rejects.toThrow(ConflictError);
-    const administrators = (await members.list()).filter((member) => member.role === "ADMINISTRADOR");
+    const administrators = (await listAll(members)).filter((member) => member.role === "ADMINISTRADOR");
     expect(administrators).toHaveLength(1);
     expect(administrators[0]?.id).toBe(first.id);
   });
@@ -342,14 +347,14 @@ describe("F3 · solo puede haber un ADMINISTRADOR", () => {
       expect(created.role).toBe(role);
       expect(created.active).toBe(true);
     }
-    expect(await members.list()).toHaveLength(1 + otherRoles.length);
+    expect(await listAll(members)).toHaveLength(1 + otherRoles.length);
   });
 
   it("permite varias cuentas de un mismo rol que no es ADMINISTRADOR", async () => {
     const { members } = makeWorld();
     await members.provision(aProvisionedMember({ role: "BIBLIOTECARIO" }));
     await members.provision(aProvisionedMember({ role: "BIBLIOTECARIO" }));
-    expect((await members.list()).filter((member) => member.role === "BIBLIOTECARIO")).toHaveLength(2);
+    expect((await listAll(members)).filter((member) => member.role === "BIBLIOTECARIO")).toHaveLength(2);
   });
 
   it("el ADMINISTRADOR puede provisionarse después de otros roles si aún no existe uno", async () => {
@@ -366,7 +371,7 @@ describe("F3 · solo puede haber un ADMINISTRADOR", () => {
     await expect(
       members.provision(aProvisionedMember({ email: "admin@example.com", role: "ADMINISTRADOR" })),
     ).rejects.toThrow(ConflictError);
-    expect(await members.list()).toHaveLength(1);
+    expect(await listAll(members)).toHaveLength(1);
   });
 
   it("el repositorio también se niega a guardar un segundo ADMINISTRADOR", async () => {
@@ -387,7 +392,7 @@ describe("F3 · solo puede haber un ADMINISTRADOR", () => {
         active: true,
       }),
     ).rejects.toThrow(ConflictError);
-    expect(await repos.members.list()).toHaveLength(1);
+    expect((await repos.members.list(100)).members).toHaveLength(1);
   });
 });
 

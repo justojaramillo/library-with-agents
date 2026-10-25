@@ -1,3 +1,4 @@
+import { ZodError } from "zod";
 import type { DocumentData, Firestore } from "firebase-admin/firestore";
 import { ConflictError } from "@/shared/server/errors";
 import { CreateBookInputSchema } from "../schema";
@@ -8,7 +9,15 @@ const BOOKS_COLLECTION = "books";
 
 /** Los documentos se validan al leerlos: Firestore no impone esquema ni unicidad (ADR-0003). */
 function toRecord(id: string, fields: DocumentData | undefined): BookRecord {
-  return { ...CreateBookInputSchema.parse(fields), id };
+  try {
+    return { ...CreateBookInputSchema.parse(fields), id };
+  } catch (error) {
+    if (error instanceof ZodError) {
+      // Un documento corrupto es un fallo del servidor, no un dato inválido del cliente: la API responde 500.
+      throw new Error(`Documento de libro inválido (${id})`);
+    }
+    throw error;
+  }
 }
 
 export function createFirestoreBookRepository(db: Firestore): BookRepository {

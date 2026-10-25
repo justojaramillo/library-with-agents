@@ -26,6 +26,8 @@ vi.mock("@/features/container", () => ({
     }
     return { loans: holder.world.service };
   },
+  // S1: las rutas invalidan la caché del catálogo; aquí no se comprueba (ver loan-routes-cache.test.ts).
+  invalidateBooksCache: () => undefined,
 }));
 
 const sameOriginJson = { "content-type": "application/json", "sec-fetch-site": "same-origin" };

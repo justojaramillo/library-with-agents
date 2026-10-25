@@ -9,6 +9,12 @@ export type MemberRecord = {
   active: boolean;
 };
 
+/** Una página de cuentas del repositorio: `hasMore` es `true` si existe al menos una cuenta más después de la última. */
+export type MemberRecordPage = { members: MemberRecord[]; hasMore: boolean };
+
+/** Resultado de una búsqueda: `truncated` es `true` si se alcanzó el tope de lectura y puede haber más coincidencias. */
+export type MemberSearchResult = { members: MemberRecord[]; truncated: boolean };
+
 export interface MemberRepository {
   /**
    * Guarda la cuenta con el `id` (uid) recibido. Lanza `ConflictError` si ya existe ese id o si el rol es
@@ -21,10 +27,16 @@ export interface MemberRepository {
   findByIds(ids: Id[]): Promise<MemberRecord[]>;
   /** `true` si ya hay al menos una cuenta con ese rol (se usa para el único ADMINISTRADOR). */
   existsWithRole(role: Role): Promise<boolean>;
-  list(): Promise<MemberRecord[]>;
+  /**
+   * S1 · Hasta `limit` cuentas ordenadas por nombre y luego por id, a partir de la que sigue a `after` (id de la
+   * última cuenta de la página anterior). Lee `limit + 1` para calcular `hasMore`. Lanza un error de validación
+   * (`ZodError`, 400) si `after` no existe.
+   */
+  list(limit: number, after?: Id): Promise<MemberRecordPage>;
   /**
    * B1–B4 · Cuentas cuyo nombre o correo coincide con `q` (cada palabra de `q` es el comienzo de alguna palabra),
    * ordenadas por nombre y recortadas a `limit`. Con `lendable`, solo cuentas activas con rol de prestatario.
+   * `truncated` es `true` si se leyeron los 200 documentos del tope (puede haber más); en memoria siempre `false`.
    */
-  search(q: string, limit: number, lendable: boolean): Promise<MemberRecord[]>;
+  search(q: string, limit: number, lendable: boolean): Promise<MemberSearchResult>;
 }

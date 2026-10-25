@@ -1,9 +1,13 @@
+import { unstable_rethrow } from "next/navigation";
+import { headers } from "next/headers";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { getContainer } from "@/features/container";
 import { BookList } from "@/features/catalog/ui/book-list";
 import { SearchBooksQuerySchema } from "@/features/catalog/schema";
 import { SearchForm } from "@/features/catalog/ui/search-form";
+import { TooManyRequestsError } from "@/shared/server/errors";
+import { clientKey, enforceRateLimit } from "@/shared/server/security/rate-limit";
 
 type HomeSearchParams = PageProps<"/">["searchParams"];
 
@@ -24,12 +28,50 @@ function parseQuery(value: string | string[] | undefined): string {
   return "";
 }
 
+/** Si el error es de límite de tasa devuelve los segundos de espera; cualquier otro error se propaga. */
+function readRetryAfter<T>(error: T): number {
+  unstable_rethrow(error);
+  if (error instanceof TooManyRequestsError) {
+    return error.retryAfterSeconds;
+  }
+  throw error;
+}
+
+/** Cuenta la búsqueda en el límite de tasa (S1, regla 12). Devuelve los segundos de espera, o `null` si puede seguir. */
+async function checkSearchLimit(): Promise<number | null> {
+  const requestHeaders = await headers();
+  try {
+    enforceRateLimit("catalogSearch", clientKey({ headers: requestHeaders }), new Date());
+    return null;
+  } catch (error) {
+    return readRetryAfter(error);
+  }
+}
+
+/** Aviso cuando se superó el límite de búsquedas; sustituye a la lista. */
+function RateLimitNotice({ retryAfterSeconds }: { retryAfterSeconds: number }) {
+  return (
+    <p role="alert" className="rounded-md border border-control-border bg-surface p-4 text-ink">
+      Demasiadas búsquedas seguidas. Espera {retryAfterSeconds} segundos e inténtalo de nuevo.
+    </p>
+  );
+}
+
 /** Parte dinámica: lee `searchParams` (dato de la petición), por eso va dentro de `<Suspense>`. */
 async function CatalogContent({ searchParams }: { searchParams: HomeSearchParams }) {
   const params = await searchParams;
   // Con partialPrefetching el prerender ya trae `searchParams`; esperar la conexión evita prerenderizar la lectura de Firestore.
   await connection();
   const q = parseQuery(params.q);
+  const retryAfterSeconds = await checkSearchLimit();
+  if (retryAfterSeconds !== null) {
+    return (
+      <>
+        <SearchForm q={q} />
+        <RateLimitNotice retryAfterSeconds={retryAfterSeconds} />
+      </>
+    );
+  }
   const books = await getContainer().books.search(q);
 
   return (

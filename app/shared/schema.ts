@@ -11,7 +11,9 @@ export const IdSchema = z
   .string()
   .min(1)
   .max(128)
-  .regex(/^[^/]+$/, "El id no puede llevar «/»");
+  .regex(/^[^/]+$/, "El id no puede llevar «/»")
+  // Ids que Firestore no admite como identificador de documento: `.`, `..` y los de la forma `__x__`.
+  .refine((id) => id !== "." && id !== ".." && !/^__.*__$/.test(id), "Id reservado por Firestore");
 export type Id = z.infer<typeof IdSchema>;
 
 /** Roles del sistema (ADR-0004, `docs/features.md`). */

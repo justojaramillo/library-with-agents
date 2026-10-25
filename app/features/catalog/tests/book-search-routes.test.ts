@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiErrorSchema } from "@/shared/schema";
 import { aBook, makeWorld, type World } from "@/tests/helpers/factories";
 import { BookSchema } from "../schema";
+import { resetRateLimits } from "@/shared/server/security/rate-limit";
 import { GET as booksRoute } from "@/api/books/route";
 
 const holder = vi.hoisted(() => ({ world: null as World | null }));
@@ -36,6 +37,7 @@ function get(search: string) {
 }
 
 beforeEach(() => {
+  resetRateLimits();
   holder.world = makeWorld();
 });
 

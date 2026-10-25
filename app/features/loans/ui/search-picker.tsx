@@ -17,9 +17,12 @@ type SearchState<T> =
   | { kind: "idle" }
   | { kind: "loading" }
   | { kind: "error"; message: string }
-  | { kind: "results"; items: T[]; more: boolean };
+  | { kind: "results"; items: T[]; more: boolean; truncated: boolean };
 
-type FetchResult<T> = { ok: true; items: T[] } | { ok: false; message: string };
+type FetchResult<T> = { ok: true; items: T[]; truncated: boolean } | { ok: false; message: string };
+
+/** La API marca con esta cabecera que la búsqueda leyó el tope de documentos (S1, regla 7). */
+const TRUNCATED_HEADER = "X-Search-Truncated";
 
 /** Pide las sugerencias y valida la respuesta con el esquema en el mismo punto de lectura. */
 async function fetchSuggestions<T>(url: string, schema: z.ZodType<T[]>): Promise<FetchResult<T>> {
@@ -32,7 +35,7 @@ async function fetchSuggestions<T>(url: string, schema: z.ZodType<T[]>): Promise
     if (!parsed.success) {
       return { ok: false, message: SEARCH_ERROR };
     }
-    return { ok: true, items: parsed.data };
+    return { ok: true, items: parsed.data, truncated: res.headers.get(TRUNCATED_HEADER) === "1" };
   } catch {
     return { ok: false, message: SEARCH_ERROR };
   }
@@ -85,6 +88,7 @@ function useSuggestions<T>(buildUrl: (q: string) => string, schema: z.ZodType<T[
       kind: "results",
       items: result.items.slice(0, SUGGESTION_LIMIT),
       more: result.items.length > SUGGESTION_LIMIT,
+      truncated: result.truncated,
     });
   }
 
@@ -128,6 +132,18 @@ function Feedback<T>({ state, id }: { state: SearchState<T>; id: string }) {
     );
   }
   return null;
+}
+
+/** Aviso aparte del resto: la lista puede estar completa y aun así haber más coincidencias sin leer. */
+function TruncatedNotice<T>({ state }: { state: SearchState<T> }) {
+  if (state.kind !== "results" || !state.truncated) {
+    return null;
+  }
+  return (
+    <p role="status" className="text-ink-muted">
+      Puede haber más coincidencias: escribe más para afinar.
+    </p>
+  );
 }
 
 function announcement<T>(state: SearchState<T>): string {
@@ -215,6 +231,7 @@ export function SearchPicker<T>(props: SearchPickerProps<T>) {
         {announcement(state)}
       </p>
       <Feedback state={state} id={feedbackId} />
+      <TruncatedNotice state={state} />
       {state.kind === "results" && (
         <ul className="grid gap-2">
           {state.items.map((item) => (

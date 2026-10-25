@@ -1,5 +1,6 @@
 import type { Id, Role } from "@/shared/schema";
 import { ConflictError } from "@/shared/server/errors";
+import { comparePageOrder, unknownCursorError } from "./member-paging";
 import { matchesMemberQuery, passesLendable, sortAndLimit } from "./member-search";
 import type { MemberRecord, MemberRepository } from "./repository";
 
@@ -36,8 +37,18 @@ class MemoryMembers implements MemberRepository {
     return [...this.rows.values()].some((member) => member.role === role);
   }
 
-  async list() {
-    return [...this.rows.values()].map((member) => ({ ...member }));
+  async list(limit: number, after?: Id) {
+    const sorted = [...this.rows.values()].sort(comparePageOrder);
+    let start = 0;
+    if (after !== undefined) {
+      const index = sorted.findIndex((member) => member.id === after);
+      if (index === -1) {
+        throw unknownCursorError();
+      }
+      start = index + 1;
+    }
+    const window = sorted.slice(start, start + limit + 1);
+    return { members: window.slice(0, limit).map((member) => ({ ...member })), hasMore: window.length > limit };
   }
 
   async search(q: string, limit: number, lendable: boolean) {
@@ -45,7 +56,7 @@ class MemoryMembers implements MemberRepository {
       .filter((member) => matchesMemberQuery(member, q))
       .filter((member) => passesLendable(member, lendable))
       .map((member) => ({ ...member }));
-    return sortAndLimit(found, limit);
+    return { members: sortAndLimit(found, limit), truncated: false };
   }
 }
 

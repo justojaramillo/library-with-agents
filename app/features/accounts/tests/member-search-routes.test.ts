@@ -2,8 +2,9 @@ import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiErrorSchema, type Role } from "@/shared/schema";
 import { makeWorld, type World } from "@/tests/helpers/factories";
-import { MemberSchema } from "../schema";
+import { MemberPageSchema, MemberSchema } from "../schema";
 import type { MemberRecord } from "../server/repository";
+import { resetRateLimits } from "@/shared/server/security/rate-limit";
 import { GET as membersRoute } from "@/api/members/route";
 
 type Session = { cookie: string | undefined; uid: string; role: Role; active: boolean };
@@ -79,6 +80,7 @@ function get(search: string) {
 }
 
 beforeEach(() => {
+  resetRateLimits();
   holder.world = makeWorld();
   holder.session = { cookie: undefined, uid: "uid-1", role: "BIBLIOTECARIO", active: true };
 });
@@ -247,14 +249,14 @@ describe("GET /api/members?q= · resultados (200)", () => {
   });
 });
 
-describe("GET /api/members sin q (listado de F3, sigue igual)", () => {
+describe("GET /api/members sin q (listado paginado, S1)", () => {
   it("sin sesión responde 401 y un prestatario 403", async () => {
     expect((await get("")).status).toBe(401);
     signInAs("ESTUDIANTE");
     expect((await get("")).status).toBe(403);
   });
 
-  it("el personal sigue recibiendo todas las cuentas", async () => {
+  it("el personal recibe una MemberPage con todas las cuentas si caben en la página", async () => {
     await addMember("Ana Gómez");
     await addMember("Luis Soto", { active: false });
     await addMember("Marta Ríos", { role: "DOCENTE" });
@@ -263,10 +265,12 @@ describe("GET /api/members sin q (listado de F3, sigue igual)", () => {
     const response = await get("");
 
     expect(response.status).toBe(200);
-    expect(MemberSchema.array().parse(await response.json())).toHaveLength(3);
+    const page = MemberPageSchema.parse(await response.json());
+    expect(page.members).toHaveLength(3);
+    expect(page.next_after).toBeNull();
   });
 
-  it("un limit suelto sin q no lo convierte en búsqueda: sigue listando todo", async () => {
+  it("un limit suelto sin q no lo convierte en búsqueda: lista una página de ese tamaño", async () => {
     await addMember("Ana Gómez");
     await addMember("Luis Soto");
     signInAs("ADMINISTRADOR");
@@ -274,6 +278,8 @@ describe("GET /api/members sin q (listado de F3, sigue igual)", () => {
     const response = await get("?limit=1");
 
     expect(response.status).toBe(200);
-    expect(MemberSchema.array().parse(await response.json())).toHaveLength(2);
+    const page = MemberPageSchema.parse(await response.json());
+    expect(page.members.map((member) => member.name)).toEqual(["Ana Gómez"]);
+    expect(page.next_after).toBe(page.members[0]?.id);
   });
 });

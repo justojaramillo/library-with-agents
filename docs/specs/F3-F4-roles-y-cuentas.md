@@ -28,7 +28,7 @@ Que la biblioteca tenga cinco roles (`EXTERNO`, `ESTUDIANTE`, `DOCENTE`, `BIBLIO
 | `provision` | `ProvisionMemberInput` | `Member` · `ConflictError` (correo repetido o segundo administrador) |
 | `login` | `SessionLoginInput` (`id_token` de Firebase, obtenido por el cliente con correo y contraseña) | `Member` y la cookie de sesión · `UnauthorizedError` |
 | `POST /api/members` | `CreateMemberInput` | 201 `Member` · 400 · 401 · 403 · 409 |
-| `GET /api/members` | — | 200 `Member[]` · 401 · 403 |
+| `GET /api/members` | `limit`, `after` opcionales (S1) | 200 `MemberPage` (antes `Member[]`) · 401 · 403 |
 | `POST /api/books` | `CreateBookInput` | 201 `Book` · 400 · 401 · 403 · 409 |
 
 ## Autorización

@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { LendInputSchema } from "@/features/loans/schema";
-import { getContainer } from "@/features/container";
+import { getContainer, invalidateBooksCache } from "@/features/container";
 import { assertSameOrigin, handleError, requireUser } from "@/shared/server/http";
 
 /**
@@ -13,6 +13,7 @@ export async function POST(req: NextRequest) {
     const actor = await requireUser();
     const input = LendInputSchema.parse(await req.json());
     const loan = await getContainer().loans.lend(input, actor, new Date());
+    invalidateBooksCache();
     return NextResponse.json(loan, { status: 201 });
   } catch (error) {
     return handleError(error);

@@ -215,7 +215,7 @@ describe("B2 · el repositorio en memoria con nombres astrales", () => {
 
     const found = await repos.members.search(HAN.repeat(22), 10, false);
 
-    expect(found.map((member) => member.id)).toEqual(["u-1"]);
+    expect(found.members.map((member) => member.id)).toEqual(["u-1"]);
   });
 });
 

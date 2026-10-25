@@ -7,6 +7,7 @@ import { z } from "zod";
 import { buildSearchKeys } from "@/features/accounts/server/member-search";
 import { COLLECTIONS } from "@/shared/server/collections";
 import { getAdminDb } from "@/shared/server/firebase";
+import { describeLoggedError } from "@/shared/server/security/error-log";
 
 try {
   process.loadEnvFile(".env");
@@ -110,6 +111,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((error) => {
-  console.error("El rellenado falló:", error);
+  console.error("El rellenado falló:", describeLoggedError(error));
   process.exitCode = 1;
 });

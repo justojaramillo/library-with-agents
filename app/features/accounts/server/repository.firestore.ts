@@ -1,7 +1,9 @@
-import type { DocumentSnapshot, Firestore } from "firebase-admin/firestore";
+import { ZodError } from "zod";
+import { FieldPath, type DocumentSnapshot, type Firestore } from "firebase-admin/firestore";
 import { COLLECTIONS } from "@/shared/server/collections";
 import { ConflictError } from "@/shared/server/errors";
 import { MemberSchema } from "../schema";
+import { unknownCursorError } from "./member-paging";
 import { buildSearchKeys, longestQueryWord, matchesMemberQuery, passesLendable, sortAndLimit } from "./member-search";
 import type { MemberRecord, MemberRepository } from "./repository";
 
@@ -34,7 +36,15 @@ const SEARCH_READ_LIMIT = 200;
 
 /** Valida el documento leído (rol incluido) antes de devolverlo. */
 function toRecord(snapshot: DocumentSnapshot): MemberRecord {
-  return { id: snapshot.id, ...MemberDocumentSchema.parse(snapshot.data()) };
+  try {
+    return { id: snapshot.id, ...MemberDocumentSchema.parse(snapshot.data()) };
+  } catch (error) {
+    if (error instanceof ZodError) {
+      // Un documento corrupto es un fallo del servidor, no un dato inválido del cliente: la API responde 500.
+      throw new Error(`Documento de cuenta inválido (${snapshot.id})`);
+    }
+    throw error;
+  }
 }
 
 /** Cuentas en Firestore (`members/{uid}`). Valida con Zod al escribir y al leer. */
@@ -88,20 +98,29 @@ export function createFirestoreMemberRepository(db: Firestore): MemberRepository
       const result = await members.where("role", "==", role).limit(1).get();
       return !result.empty;
     },
-    async list() {
-      const result = await members.get();
-      return result.docs.map(toRecord);
+    async list(limit, after) {
+      const ordered = members.orderBy("name").orderBy(FieldPath.documentId());
+      let query = ordered.limit(limit + 1);
+      if (after !== undefined) {
+        const cursor = await members.doc(after).get();
+        if (!cursor.exists) {
+          throw unknownCursorError();
+        }
+        query = ordered.startAfter(toRecord(cursor).name, after).limit(limit + 1);
+      }
+      const result = await query.get();
+      return { members: result.docs.slice(0, limit).map(toRecord), hasMore: result.docs.length > limit };
     },
     async search(q, limit, lendable) {
       const key = longestQueryWord(q);
       if (key.length < 2) {
-        return [];
+        return { members: [], truncated: false };
       }
       const result = await members.where("search_keys", "array-contains", key).limit(SEARCH_READ_LIMIT).get();
       const found = result.docs
         .map(toRecord)
         .filter((record) => matchesMemberQuery(record, q) && passesLendable(record, lendable));
-      return sortAndLimit(found, limit);
+      return { members: sortAndLimit(found, limit), truncated: result.docs.length >= SEARCH_READ_LIMIT };
     },
   };
 }

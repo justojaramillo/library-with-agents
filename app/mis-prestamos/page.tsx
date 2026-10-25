@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { loadBorrowerRows } from "@/borrower-rows";
 import { getContainer } from "@/features/container";
@@ -39,6 +40,8 @@ function LoanCards({ rows }: { rows: LoanRow[] }) {
 
 /** Parte dinámica: lee la cookie de sesión, por eso va dentro de `<Suspense>`. */
 async function MyLoansContent() {
+  // Espera la petición real antes de leer la sesión: verificarla usa la hora actual y la precarga de enlaces no debe prerenderizarla (S1, regla 1).
+  await connection();
   const user = await getSessionUser();
   if (!user) {
     redirect("/login");

@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { IdSchema } from "@/shared/schema";
-import { getContainer } from "@/features/container";
+import { getContainer, invalidateBooksCache } from "@/features/container";
 import { assertSameOrigin, handleError, requireUser } from "@/shared/server/http";
 
 type Context = { params: Promise<{ id: string }> };
@@ -12,6 +12,7 @@ export async function POST(req: NextRequest, context: Context) {
     const actor = await requireUser();
     const { id } = await context.params;
     const result = await getContainer().loans.returnLoan(IdSchema.parse(id), actor, new Date());
+    invalidateBooksCache();
     return NextResponse.json(result);
   } catch (error) {
     return handleError(error);

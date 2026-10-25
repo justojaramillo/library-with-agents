@@ -1,3 +1,4 @@
+import { ZodError } from "zod";
 import type { DocumentData, Firestore } from "firebase-admin/firestore";
 import { COLLECTIONS } from "@/shared/server/collections";
 import { ConflictError, NotFoundError } from "@/shared/server/errors";
@@ -8,7 +9,15 @@ const LoanFieldsSchema = LoanSchema.omit({ id: true });
 
 /** Los documentos se validan al leerlos: Firestore no impone esquema (ADR-0003). */
 function toLoan(id: string, fields: DocumentData | undefined): Loan {
-  return { ...LoanFieldsSchema.parse(fields), id };
+  try {
+    return { ...LoanFieldsSchema.parse(fields), id };
+  } catch (error) {
+    if (error instanceof ZodError) {
+      // Un documento corrupto es un fallo del servidor, no un dato inválido del cliente: la API responde 500.
+      throw new Error(`Documento de préstamo inválido (${id})`);
+    }
+    throw error;
+  }
 }
 
 function byDueDate(a: Loan, b: Loan): number {

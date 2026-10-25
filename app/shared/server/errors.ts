@@ -13,3 +13,12 @@ export class ConflictError extends DomainError {}
 export class UnauthorizedError extends DomainError {}
 /** 403: hay sesión, pero no tiene permiso sobre ese recurso. */
 export class ForbiddenError extends DomainError {}
+/** 429: demasiadas peticiones; `retryAfterSeconds` va a la cabecera `Retry-After`. */
+export class TooManyRequestsError extends DomainError {
+  readonly retryAfterSeconds: number;
+
+  constructor(message: string, retryAfterSeconds: number) {
+    super(message);
+    this.retryAfterSeconds = retryAfterSeconds;
+  }
+}

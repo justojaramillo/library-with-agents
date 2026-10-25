@@ -5,8 +5,9 @@ import { NextResponse } from "next/server";
 import { z, ZodError } from "zod";
 import { RoleSchema, STAFF_ROLES, type ApiError, type SessionUser } from "@/shared/schema";
 import { COLLECTIONS } from "./collections";
-import { ConflictError, ForbiddenError, NotFoundError, UnauthorizedError } from "./errors";
+import { ConflictError, ForbiddenError, NotFoundError, TooManyRequestsError, UnauthorizedError } from "./errors";
 import { getAdminAuth, getAdminDb } from "./firebase";
+import { describeLoggedError } from "./security/error-log";
 import { describeAuthError, isExpectedAuthError } from "./security/firebase-errors";
 import { checkSameOrigin } from "./security/origin";
 import { createSessionResolver, sessionCookieName } from "./security/session";
@@ -30,12 +31,18 @@ export function handleError<T>(error: T): NextResponse<ApiError> {
   if (error instanceof SyntaxError) {
     return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
   }
+  if (error instanceof TooManyRequestsError) {
+    return NextResponse.json(
+      { error: error.message },
+      { status: 429, headers: { "Retry-After": String(error.retryAfterSeconds) } },
+    );
+  }
   for (const [errorClass, status] of ERROR_STATUS) {
     if (error instanceof errorClass) {
       return NextResponse.json({ error: error.message }, { status });
     }
   }
-  console.error(error); // el detalle va al log, no al cliente
+  console.error("Error interno:", describeLoggedError(error)); // el detalle va al log, no al cliente
   return NextResponse.json({ error: "Error interno" }, { status: 500 });
 }
 

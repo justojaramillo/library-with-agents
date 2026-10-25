@@ -1,25 +1,36 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getContainer } from "@/features/container";
-import { CreateMemberInputSchema, SearchMembersQuerySchema } from "@/features/accounts/schema";
+import { CreateMemberInputSchema, ListMembersQuerySchema, SearchMembersQuerySchema } from "@/features/accounts/schema";
 import { assertSameOrigin, handleError, requireStaff } from "@/shared/server/http";
+import { enforceRateLimit } from "@/shared/server/security/rate-limit";
 
 /**
- * Solo personal. Con `q` busca personas (F34, B1–B5: `?q=&limit=&lendable=`; `q` inválido da 400);
- * sin `q` lista todas las cuentas.
+ * Solo personal. Con `q` busca personas (F34, B1–B5: `?q=&limit=&lendable=`; `q` inválido da 400; límite de tasa
+ * por miembro del personal; la cabecera `X-Search-Truncated: 1` avisa de que puede haber más coincidencias).
+ * Sin `q` devuelve una página de cuentas (`?limit=&after=`, S1).
  */
 export async function GET(req: NextRequest) {
   try {
-    await requireStaff();
+    const actor = await requireStaff();
     const params = req.nextUrl.searchParams;
     if (params.has("q")) {
+      enforceRateLimit("memberSearch", actor.member_id, new Date());
       const query = SearchMembersQuerySchema.parse({
         q: params.get("q") ?? undefined,
         limit: params.get("limit") ?? undefined,
         lendable: params.get("lendable") ?? undefined,
       });
-      return NextResponse.json(await getContainer().members.search(query));
+      const found = await getContainer().members.search(query);
+      if (found.truncated) {
+        return NextResponse.json(found.members, { headers: { "X-Search-Truncated": "1" } });
+      }
+      return NextResponse.json(found.members);
     }
-    return NextResponse.json(await getContainer().members.list());
+    const page = ListMembersQuerySchema.parse({
+      limit: params.get("limit") ?? undefined,
+      after: params.get("after") ?? undefined,
+    });
+    return NextResponse.json(await getContainer().members.list(page));
   } catch (error) {
     return handleError(error);
   }

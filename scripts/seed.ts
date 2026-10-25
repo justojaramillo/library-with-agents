@@ -15,6 +15,7 @@ import { createFirestoreLoanRepository } from "@/features/loans/server/repositor
 import type { ProvisionMemberInput } from "@/features/accounts/schema";
 import { ConflictError } from "@/shared/server/errors";
 import { getAdminAuth, getAdminDb } from "@/shared/server/firebase";
+import { describeLoggedError } from "@/shared/server/security/error-log";
 
 try {
   process.loadEnvFile(".env");
@@ -115,6 +116,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((error) => {
-  console.error("El seed falló:", error);
+  console.error("El seed falló:", describeLoggedError(error));
   process.exitCode = 1;
 });

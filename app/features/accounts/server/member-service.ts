@@ -1,11 +1,14 @@
 import { z } from "zod";
 import { IdSchema, type Id } from "@/shared/schema";
 import { ConflictError } from "@/shared/server/errors";
+import { describeLoggedError } from "@/shared/server/security/error-log";
 import {
   CreateMemberInputSchema,
   ProvisionMemberInputSchema,
   type CreateMemberInput,
+  type ListMembersQuery,
   type Member,
+  type MemberPage,
   type SearchMembersQuery,
   type ProvisionMemberInput,
 } from "../schema";
@@ -27,9 +30,17 @@ export type MemberService = {
   register(input: CreateMemberInput): Promise<Member>;
   /** La cuenta pública con ese id (uid), o `undefined` si no existe. */
   get(id: string): Promise<Member | undefined>;
-  list(): Promise<Member[]>;
-  /** B1–B4 · Búsqueda de personas por nombre o correo (la consulta ya viene validada con `SearchMembersQuerySchema`). */
-  search(query: SearchMembersQuery): Promise<Member[]>;
+  /**
+   * S1 · Una página de cuentas (orden por nombre y luego id). La consulta ya viene validada con `ListMembersQuerySchema`.
+   * `next_after` es el id de la última cuenta si hay más, o `null`. Un `after` inexistente da un error de validación (400).
+   * No comprueba al actor: quien la llame debe exigir personal antes.
+   */
+  list(query: ListMembersQuery): Promise<MemberPage>;
+  /**
+   * B1–B4 · Búsqueda de personas por nombre o correo (la consulta ya viene validada con `SearchMembersQuerySchema`).
+   * `truncated` avisa de que se alcanzó el tope de lectura y puede haber más coincidencias.
+   */
+  search(query: SearchMembersQuery): Promise<{ members: Member[]; truncated: boolean }>;
   /** Lectura por lote (F34–F35): las cuentas públicas con esos ids, en el orden recibido. Sin repetidos ni inexistentes; máximo 500 ids (si no, error de validación → 400). */
   getMany(ids: Id[]): Promise<Member[]>;
 };
@@ -50,7 +61,7 @@ async function rollbackIdentity(identity: IdentityProvider, uid: string): Promis
   try {
     await identity.deleteUser(uid);
   } catch (error) {
-    console.error(`No se pudo borrar la identidad ${uid} tras un alta fallida`, error);
+    console.error(`No se pudo borrar la identidad ${uid} tras un alta fallida:`, describeLoggedError(error));
   }
 }
 
@@ -87,12 +98,18 @@ export function createMemberService(deps: MemberServiceDeps): MemberService & Me
       const record = await deps.members.findById(id);
       return record && toPublicMember(record);
     },
-    async list() {
-      return (await deps.members.list()).map(toPublicMember);
+    async list(query) {
+      const page = await deps.members.list(query.limit, query.after);
+      const members = page.members.map(toPublicMember);
+      const last = members.at(-1);
+      if (!page.hasMore || last === undefined) {
+        return { members, next_after: null };
+      }
+      return { members, next_after: last.id };
     },
     async search(query) {
       const found = await deps.members.search(query.q, query.limit, query.lendable);
-      return found.map(toPublicMember);
+      return { members: found.members.map(toPublicMember), truncated: found.truncated };
     },
     async getMany(ids) {
       const unique = [...new Set(BatchIdsSchema.parse(ids))];

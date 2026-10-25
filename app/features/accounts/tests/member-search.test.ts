@@ -208,36 +208,36 @@ describe("B2 · MemberRepository.search (en memoria)", () => {
 
     const found = await members.search("mar per", 10, false);
 
-    expect(found.map((member) => member.name)).toEqual(["María Pérez"]);
+    expect(found.members.map((member) => member.name)).toEqual(["María Pérez"]);
   });
 
   it("«mar» trae a María Pérez y a Pedro Martínez; «ería» a ninguno", async () => {
     const members = await repoWith([record("María Pérez"), record("Pedro Martínez"), record("Luis Soto")]);
 
-    expect((await members.search("mar", 10, false)).map((member) => member.name).sort()).toEqual([
+    expect((await members.search("mar", 10, false)).members.map((member) => member.name).sort()).toEqual([
       "María Pérez",
       "Pedro Martínez",
     ]);
-    await expect(members.search("ería", 10, false)).resolves.toEqual([]);
+    await expect(members.search("ería", 10, false)).resolves.toEqual({ members: [], truncated: false });
   });
 
   it("«JOSE» encuentra a «José»", async () => {
     const members = await repoWith([record("José Díaz"), record("Luis Soto")]);
 
-    expect((await members.search("JOSE", 10, false)).map((member) => member.name)).toEqual(["José Díaz"]);
+    expect((await members.search("JOSE", 10, false)).members.map((member) => member.name)).toEqual(["José Díaz"]);
   });
 
   it("encuentra por la parte del correo anterior a @", async () => {
     const members = await repoWith([record("Luis Soto", { email: "lsoto.biblio@example.com" })]);
 
-    expect(await members.search("biblio", 10, false)).toHaveLength(1);
-    expect(await members.search("example", 10, false)).toHaveLength(0);
+    expect((await members.search("biblio", 10, false)).members).toHaveLength(1);
+    expect((await members.search("example", 10, false)).members).toHaveLength(0);
   });
 
   it("sin coincidencias devuelve una lista vacía", async () => {
     const members = await repoWith([record("Luis Soto")]);
 
-    await expect(members.search("zzz", 10, false)).resolves.toEqual([]);
+    await expect(members.search("zzz", 10, false)).resolves.toEqual({ members: [], truncated: false });
   });
 
   it("ordena por nombre en orden español, no por código de carácter", async () => {
@@ -250,7 +250,12 @@ describe("B2 · MemberRepository.search (en memoria)", () => {
 
     const found = await members.search("diaz", 10, false);
 
-    expect(found.map((member) => member.name)).toEqual(["Alberto Díaz", "Álvaro Díaz", "Beatriz Díaz", "Zulema Díaz"]);
+    expect(found.members.map((member) => member.name)).toEqual([
+      "Alberto Díaz",
+      "Álvaro Díaz",
+      "Beatriz Díaz",
+      "Zulema Díaz",
+    ]);
   });
 
   it("el orden por nombre no depende del orden en que se crearon las cuentas", async () => {
@@ -258,12 +263,12 @@ describe("B2 · MemberRepository.search (en memoria)", () => {
     const forward = await repoWith(names.map((name) => record(name)));
     const backward = await repoWith([...names].reverse().map((name) => record(name)));
 
-    expect((await forward.search("ruiz", 10, false)).map((member) => member.name)).toEqual([
+    expect((await forward.search("ruiz", 10, false)).members.map((member) => member.name)).toEqual([
       "Ana Ruiz",
       "Bruno Ruiz",
       "Carla Ruiz",
     ]);
-    expect((await backward.search("ruiz", 10, false)).map((member) => member.name)).toEqual([
+    expect((await backward.search("ruiz", 10, false)).members.map((member) => member.name)).toEqual([
       "Ana Ruiz",
       "Bruno Ruiz",
       "Carla Ruiz",
@@ -278,7 +283,10 @@ describe("B2 · MemberRepository.search (en memoria)", () => {
 
     const found = await members.search("ana gomez", 10, false);
 
-    expect(found.map((member) => member.email).sort()).toEqual(["ana.gomez1@example.com", "ana.gomez2@example.com"]);
+    expect(found.members.map((member) => member.email).sort()).toEqual([
+      "ana.gomez1@example.com",
+      "ana.gomez2@example.com",
+    ]);
   });
 
   describe("limit", () => {
@@ -291,7 +299,7 @@ describe("B2 · MemberRepository.search (en memoria)", () => {
     it("limit 1 devuelve solo la primera por nombre, aunque se haya creado la última", async () => {
       const members = await manyLectores(3);
 
-      expect((await members.search("lector", 1, false)).map((member) => member.name)).toEqual(["Lector A"]);
+      expect((await members.search("lector", 1, false)).members.map((member) => member.name)).toEqual(["Lector A"]);
     });
 
     it("limit 20 con 21 coincidencias devuelve las 20 primeras por nombre", async () => {
@@ -299,15 +307,15 @@ describe("B2 · MemberRepository.search (en memoria)", () => {
 
       const found = await members.search("lector", 20, false);
 
-      expect(found).toHaveLength(20);
-      expect(found[0].name).toBe("Lector A");
-      expect(found[19].name).toBe("Lector T");
+      expect(found.members).toHaveLength(20);
+      expect(found.members[0].name).toBe("Lector A");
+      expect(found.members[19].name).toBe("Lector T");
     });
 
     it("con menos coincidencias que el límite devuelve solo las que hay", async () => {
       const members = await manyLectores(2);
 
-      expect(await members.search("lector", 20, false)).toHaveLength(2);
+      expect((await members.search("lector", 20, false)).members).toHaveLength(2);
     });
 
     it("el límite se aplica después de filtrar con lendable", async () => {
@@ -319,7 +327,7 @@ describe("B2 · MemberRepository.search (en memoria)", () => {
 
       const found = await members.search("prueba", 1, true);
 
-      expect(found.map((member) => member.name)).toEqual(["Beto Prueba"]);
+      expect(found.members.map((member) => member.name)).toEqual(["Beto Prueba"]);
     });
   });
 
@@ -341,11 +349,15 @@ describe("B2 · MemberRepository.search (en memoria)", () => {
 
       const found = await members.search("prueba", 20, true);
 
-      expect(found.map((member) => member.name)).toEqual(["Prueba Docente", "Prueba Estudiante", "Prueba Externo"]);
-      const roles: Role[] = found.map((member) => member.role);
+      expect(found.members.map((member) => member.name)).toEqual([
+        "Prueba Docente",
+        "Prueba Estudiante",
+        "Prueba Externo",
+      ]);
+      const roles: Role[] = found.members.map((member) => member.role);
       expect(roles).not.toContain("BIBLIOTECARIO");
       expect(roles).not.toContain("ADMINISTRADOR");
-      expect(found.every((member) => member.active)).toBe(true);
+      expect(found.members.every((member) => member.active)).toBe(true);
     });
 
     it("con lendable = false salen todas: personal e inactivas incluidas", async () => {
@@ -353,7 +365,7 @@ describe("B2 · MemberRepository.search (en memoria)", () => {
 
       const found = await members.search("prueba", 20, false);
 
-      expect(found).toHaveLength(7);
+      expect(found.members).toHaveLength(7);
     });
 
     it("una cuenta que solo es de personal o inactiva no aparece con lendable = true aunque sea la única coincidencia", async () => {
@@ -362,7 +374,7 @@ describe("B2 · MemberRepository.search (en memoria)", () => {
         record("Zeta Inactiva", { active: false }),
       ]);
 
-      await expect(members.search("zeta", 10, true)).resolves.toEqual([]);
+      await expect(members.search("zeta", 10, true)).resolves.toEqual({ members: [], truncated: false });
     });
   });
 });
@@ -382,9 +394,9 @@ describe("MemberService.search", () => {
 
     const found = await members.search(query("mar"));
 
-    expect(found.map((member) => member.name)).toEqual(["María Pérez", "Pedro Martínez"]);
-    expectPublicShape(found);
-    expect(JSON.stringify(found)).not.toContain("search_keys");
+    expect(found.members.map((member) => member.name)).toEqual(["María Pérez", "Pedro Martínez"]);
+    expectPublicShape(found.members);
+    expect(JSON.stringify(found.members)).not.toContain("search_keys");
   });
 
   it("aplica limit y lendable", async () => {
@@ -393,11 +405,13 @@ describe("MemberService.search", () => {
     await members.provision(aProvisionedMember({ name: "Prueba Dos", role: "DOCENTE" }));
     await members.provision(aProvisionedMember({ name: "Prueba Tres", role: "BIBLIOTECARIO" }));
 
-    expect((await members.search(query("prueba", { lendable: true }))).map((member) => member.name)).toEqual([
+    expect((await members.search(query("prueba", { lendable: true }))).members.map((member) => member.name)).toEqual([
       "Prueba Dos",
       "Prueba Uno",
     ]);
-    expect((await members.search(query("prueba", { limit: 1 }))).map((member) => member.name)).toEqual(["Prueba Dos"]);
+    expect((await members.search(query("prueba", { limit: 1 }))).members.map((member) => member.name)).toEqual([
+      "Prueba Dos",
+    ]);
   });
 
   it("una cuenta recién creada se encuentra de inmediato por nombre y por correo", async () => {
@@ -406,14 +420,14 @@ describe("MemberService.search", () => {
       aProvisionedMember({ name: "Gabriela Núñez", email: "gnunez.lectora@example.com" }),
     );
 
-    expect((await members.search(query("gabri"))).map((member) => member.id)).toEqual([created.id]);
-    expect((await members.search(query("lectora"))).map((member) => member.id)).toEqual([created.id]);
+    expect((await members.search(query("gabri"))).members.map((member) => member.id)).toEqual([created.id]);
+    expect((await members.search(query("lectora"))).members.map((member) => member.id)).toEqual([created.id]);
   });
 
   it("sin coincidencias devuelve una lista vacía", async () => {
     const { members } = makeWorld();
     await members.provision(aProvisionedMember({ name: "Luis Soto" }));
 
-    await expect(members.search(query("zzz"))).resolves.toEqual([]);
+    await expect(members.search(query("zzz"))).resolves.toEqual({ members: [], truncated: false });
   });
 });

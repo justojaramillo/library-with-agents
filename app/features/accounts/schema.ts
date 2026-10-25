@@ -70,3 +70,20 @@ export const SearchMembersQuerySchema = z.object({
     .transform((value) => value === "true"),
 });
 export type SearchMembersQuery = z.infer<typeof SearchMembersQuerySchema>;
+
+/**
+ * Listar cuentas con paginación — entrada de `GET /api/members?limit=&after=` (sin `q`). Orden por nombre y luego
+ * por id; `after` es el id de la última cuenta de la página anterior. Detalle en `docs/specs/S1-endurecimiento-de-seguridad.md`.
+ */
+export const ListMembersQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  after: IdSchema.optional(),
+});
+export type ListMembersQuery = z.infer<typeof ListMembersQuerySchema>;
+
+/** Una página de cuentas. `next_after` es el valor para pedir la página siguiente, o `null` si no hay más. */
+export const MemberPageSchema = z.object({
+  members: z.array(MemberSchema),
+  next_after: IdSchema.nullable(),
+});
+export type MemberPage = z.infer<typeof MemberPageSchema>;

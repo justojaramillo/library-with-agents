@@ -1,4 +1,5 @@
 import { unstable_rethrow } from "next/navigation";
+import { connection } from "next/server";
 import { NavBar, type NavBarUser } from "@/features/accounts/ui/nav-bar";
 import { getContainer } from "@/features/container";
 import { getSessionUser } from "@/shared/server/http";
@@ -9,6 +10,8 @@ import { describeAuthError } from "@/shared/server/security/firebase-errors";
  * se ven como «sin sesión» (regla 6). El rol sale de la cuenta, no de la cookie (regla 7).
  */
 async function readNavUser(): Promise<NavBarUser | null> {
+  // Espera la petición real antes de leer la sesión: verificarla usa la hora actual y la precarga de enlaces no debe prerenderizarla (S1, regla 1).
+  await connection();
   try {
     const user = await getSessionUser();
     if (!user) {
