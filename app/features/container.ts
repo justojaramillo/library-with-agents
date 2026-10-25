@@ -29,14 +29,12 @@ function build() {
     // Alta con cualquier rol: solo para el seed y F13 (administración); ninguna ruta debe usarlo.
     admin: { provision: memberService.provision },
     auth: createAuthService({ members: memberRepository, identity }),
-    // Se crea de forma perezosa: mientras F5/F7 no estén implementadas, el resto de la app funciona.
-    loans: () =>
-      createLoanService({
-        books: bookRepository,
-        members: memberRepository,
-        loans: loanRepository,
-        fine: createDailyFineStrategy(),
-      }),
+    loans: createLoanService({
+      books: bookRepository,
+      members: memberRepository,
+      loans: loanRepository,
+      fine: createDailyFineStrategy(),
+    }),
   };
 }
 

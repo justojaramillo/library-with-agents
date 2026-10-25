@@ -8,15 +8,34 @@ export interface FineStrategy {
   calculate(daysLate: number): number;
 }
 
+const MS_PER_DAY = 86_400_000;
+
 /**
- * TODO F7 — Multa diaria con tope: `min(daysLate * ratePerDay, cap)`, y 0 si no hay retraso.
- * Valores por defecto en `LOAN_RULES`.
+ * Multa diaria con tope: `min(daysLate * ratePerDay, cap)`, y 0 si no hay retraso.
+ * Sin argumentos usa los valores de `LOAN_RULES`.
  */
 export function createDailyFineStrategy(
   ratePerDay: number = LOAN_RULES.fineCopPerDay,
   cap: number = LOAN_RULES.fineCapCop,
 ): FineStrategy {
-  void ratePerDay;
-  void cap;
-  throw new Error("NOT_IMPLEMENTED: F7 · createDailyFineStrategy");
+  return {
+    calculate(daysLate) {
+      if (!(daysLate > 0)) {
+        return 0;
+      }
+      return Math.min(daysLate * ratePerDay, cap);
+    },
+  };
+}
+
+/**
+ * Días de retraso de un préstamo: 0 si `now` no pasa de `dueAt`; si no, cualquier fracción de día
+ * cuenta como un día completo. Pura: el tiempo llega por parámetro.
+ */
+export function computeDaysLate(dueAt: string, now: Date): number {
+  const elapsedMs = now.getTime() - Date.parse(dueAt);
+  if (!(elapsedMs > 0)) {
+    return 0;
+  }
+  return Math.ceil(elapsedMs / MS_PER_DAY);
 }

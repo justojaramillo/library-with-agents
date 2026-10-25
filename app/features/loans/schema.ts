@@ -12,7 +12,10 @@ import type { BorrowerRole, Id, Role } from "@/shared/schema";
 
 /** Reglas de negocio con nombre: viven aquí para que todos las lean igual. */
 export const LOAN_RULES = {
-  maxActiveLoansPerMember: 3,
+  /** Cupo de préstamos activos según el rol (hoy solo físicos; los digitales se contarán aparte, F38). */
+  maxActiveLoansByRole: { EXTERNO: 3, ESTUDIANTE: 3, DOCENTE: 5 } satisfies Record<BorrowerRole, number>,
+  /** Renovaciones permitidas por préstamo según el rol (F24). */
+  maxRenewalsByRole: { EXTERNO: 2, ESTUDIANTE: 2, DOCENTE: 3 } satisfies Record<BorrowerRole, number>,
   /** Plazo en días según el rol de quien pide prestado (ADR-0004). */
   loanDaysByRole: { EXTERNO: 15, ESTUDIANTE: 20, DOCENTE: 30 } satisfies Record<BorrowerRole, number>,
   /** F7 · multa por defecto: COP por día de retraso y tope. */
@@ -60,14 +63,16 @@ export type Actor = { member_id: Id; role: Role };
  * Puerto del servicio de préstamos. El tiempo se inyecta (`now`) para que las pruebas
  * no dependan del reloj real.
  *
+ * El actor sale siempre de la sesión. Detalle en `docs/specs/F5-F8-prestamos-fisicos.md`.
+ *
  * Errores esperados (clases en `app/shared/server/errors.ts`):
- *  - lend:   NotFoundError, ConflictError (sin ejemplares / límite de préstamos / cuenta inactiva / deuda pendiente),
- *            ForbiddenError (el rol no puede pedir prestado, o un prestatario pide a nombre de otra persona)
- *  - return: NotFoundError, ConflictError (ya devuelto)
+ *  - lend:   NotFoundError, ConflictError (sin ejemplares / cupo lleno / cuenta inactiva / préstamo vencido / ya tiene ese libro),
+ *            ForbiddenError (la cuenta no es de prestatario, o un prestatario pide a nombre de otra persona)
+ *  - return: ForbiddenError (el actor no es personal), NotFoundError, ConflictError (ya devuelto)
  *  - listOverdue: NotFoundError (cuenta), ForbiddenError (un prestatario pide los de otra persona)
  */
 export interface LoanServicePort {
-  lend(input: LendInput, now: Date): Promise<Loan>;
-  returnLoan(loanId: Id, now: Date): Promise<ReturnResult>;
+  lend(input: LendInput, actor: Actor, now: Date): Promise<Loan>;
+  returnLoan(loanId: Id, actor: Actor, now: Date): Promise<ReturnResult>;
   listOverdue(memberId: Id, actor: Actor, now: Date): Promise<OverdueLoan[]>;
 }

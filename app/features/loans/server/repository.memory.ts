@@ -1,7 +1,7 @@
 import type { Id } from "@/shared/schema";
-import { NotFoundError } from "@/shared/server/errors";
+import { ConflictError, NotFoundError } from "@/shared/server/errors";
 import type { Loan } from "../schema";
-import type { LoanRepository } from "./repository";
+import type { LendOutcome, LoanRepository } from "./repository";
 
 class MemoryLoans implements LoanRepository {
   private rows: Loan[] = [];
@@ -14,6 +14,28 @@ class MemoryLoans implements LoanRepository {
     return { ...row };
   }
 
+  /** Sin `await` entre comprobar y crear: en un solo hilo la operación es atómica. */
+  async createWithinLimits(
+    newLoan: Omit<Loan, "id">,
+    limits: { bookCopies: number; maxActiveForMember: number },
+  ): Promise<LendOutcome> {
+    const memberActive = this.rows.filter((loan) => loan.member_id === newLoan.member_id && loan.returned_at === null);
+    if (memberActive.some((loan) => loan.book_id === newLoan.book_id)) {
+      return { ok: false, reason: "ALREADY_HAS_BOOK" };
+    }
+    if (memberActive.length >= limits.maxActiveForMember) {
+      return { ok: false, reason: "MEMBER_LIMIT" };
+    }
+    const bookActive = this.rows.filter((loan) => loan.book_id === newLoan.book_id && loan.returned_at === null);
+    if (bookActive.length >= limits.bookCopies) {
+      return { ok: false, reason: "NO_COPIES" };
+    }
+    this.lastId += 1;
+    const row = { ...newLoan, id: String(this.lastId) };
+    this.rows.push(row);
+    return { ok: true, loan: { ...row } };
+  }
+
   async findById(id: Id) {
     const row = this.rows.find((loan) => loan.id === id);
     return row && { ...row };
@@ -23,6 +45,9 @@ class MemoryLoans implements LoanRepository {
     const row = this.rows.find((loan) => loan.id === id);
     if (!row) {
       throw new NotFoundError(`El préstamo ${id} no existe`);
+    }
+    if (row.returned_at !== null) {
+      throw new ConflictError("El préstamo ya fue devuelto");
     }
     row.returned_at = returnedAt;
     return { ...row };

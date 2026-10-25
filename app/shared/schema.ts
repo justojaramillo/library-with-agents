@@ -7,7 +7,11 @@ import { z } from "zod";
  */
 
 /** Identificadores: texto no vacío (ADR-0003). Para las cuentas es el `uid` de Firebase; para lo demás, el id de documento de Firestore. */
-export const IdSchema = z.string().min(1);
+export const IdSchema = z
+  .string()
+  .min(1)
+  .max(128)
+  .regex(/^[^/]+$/, "El id no puede llevar «/»");
 export type Id = z.infer<typeof IdSchema>;
 
 /** Roles del sistema (ADR-0004, `docs/features.md`). */

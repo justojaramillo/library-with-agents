@@ -1,9 +1,9 @@
 import type { DocumentData, Firestore } from "firebase-admin/firestore";
-import { NotFoundError } from "@/shared/server/errors";
+import { COLLECTIONS } from "@/shared/server/collections";
+import { ConflictError, NotFoundError } from "@/shared/server/errors";
 import { LoanSchema, type Loan } from "../schema";
-import type { LoanRepository } from "./repository";
+import type { LendOutcome, LoanRepository } from "./repository";
 
-const LOANS_COLLECTION = "loans";
 const LoanFieldsSchema = LoanSchema.omit({ id: true });
 
 /** Los documentos se validan al leerlos: Firestore no impone esquema (ADR-0003). */
@@ -23,8 +23,33 @@ function byLoanDate(a: Loan, b: Loan): number {
   return a.id.localeCompare(b.id);
 }
 
+type Limits = { bookCopies: number; maxActiveForMember: number };
+
+/** Transacción de F5: lee las dos consultas de conteo, decide y crea el préstamo (reintenta si hay choque). */
+async function lendInTransaction(db: Firestore, newLoan: Omit<Loan, "id">, limits: Limits): Promise<LendOutcome> {
+  const loans = db.collection(COLLECTIONS.loans);
+  return db.runTransaction(async (tx) => {
+    const memberQuery = loans.where("member_id", "==", newLoan.member_id).where("returned_at", "==", null);
+    const bookQuery = loans.where("book_id", "==", newLoan.book_id).where("returned_at", "==", null);
+    const [memberSnapshot, bookSnapshot] = await Promise.all([tx.get(memberQuery), tx.get(bookQuery)]);
+    const memberLoans = memberSnapshot.docs.map((doc) => toLoan(doc.id, doc.data()));
+    if (memberLoans.some((loan) => loan.book_id === newLoan.book_id)) {
+      return { ok: false, reason: "ALREADY_HAS_BOOK" };
+    }
+    if (memberLoans.length >= limits.maxActiveForMember) {
+      return { ok: false, reason: "MEMBER_LIMIT" };
+    }
+    if (bookSnapshot.size >= limits.bookCopies) {
+      return { ok: false, reason: "NO_COPIES" };
+    }
+    const ref = loans.doc();
+    tx.create(ref, newLoan);
+    return { ok: true, loan: { ...newLoan, id: ref.id } };
+  });
+}
+
 export function createFirestoreLoanRepository(db: Firestore): LoanRepository {
-  const loans = db.collection(LOANS_COLLECTION);
+  const loans = db.collection(COLLECTIONS.loans);
   const activeBy = (field: "book_id" | "member_id", id: string) =>
     loans.where(field, "==", id).where("returned_at", "==", null);
 
@@ -32,6 +57,9 @@ export function createFirestoreLoanRepository(db: Firestore): LoanRepository {
     async create(newLoan) {
       const ref = await loans.add(newLoan);
       return { ...newLoan, id: ref.id };
+    },
+    createWithinLimits(newLoan, limits) {
+      return lendInTransaction(db, newLoan, limits);
     },
     async findById(id) {
       const snapshot = await loans.doc(id).get();
@@ -48,6 +76,9 @@ export function createFirestoreLoanRepository(db: Firestore): LoanRepository {
           throw new NotFoundError(`El préstamo ${id} no existe`);
         }
         const loan = toLoan(snapshot.id, snapshot.data());
+        if (loan.returned_at !== null) {
+          throw new ConflictError("El préstamo ya fue devuelto");
+        }
         tx.update(ref, { returned_at: returnedAt });
         return { ...loan, returned_at: returnedAt };
       });
