@@ -20,7 +20,7 @@
 
 **Regla de orden (decisión de la persona, 2026-10-26):** se construye **en orden de olas** (Ola 2 → 3 → 4 → 5); solo se adelanta lo **estrictamente necesario** para la feature en curso (p. ej. una pieza de F26 si F24 la exige). F24 y F26 siguen en la Ola 4.
 
-**Siguiente paso:** Ola 2, en orden: F10 (autorregistro) con F16 (recuperar contraseña) y F17 (límite de intentos de ingreso); luego F11–F12 (solicitud de docente), F13–F14 (bibliotecarios, desactivar), F15 (cambiar contraseña) y F36–F37 (pantallas). Escribir cada spec con `write-spec` y esperar su aprobación. Commits locales sin push: F5–F8, F34–F35 y S1.
+**Siguiente paso:** la spec de F10 + F16 + F17 (`docs/specs/F10-F16-F17-autoservicio-de-cuentas.md`) está en **Borrador**, esperando la aprobación de la persona (4 preguntas abiertas). Ola 2, en orden: F10 (autorregistro) con F16 (recuperar contraseña) y F17 (límite de intentos de ingreso); luego F11–F12 (solicitud de docente), F13–F14 (bibliotecarios, desactivar), F15 (cambiar contraseña) y F36–F37 (pantallas). Escribir cada spec con `write-spec` y esperar su aprobación. Todo lo anterior (F5–F8, F34–F35, S1) ya está en `main` (push hecho el 2026-10-26).
 
 ## Pendientes del proyecto (borra cada uno al cerrarlo; si surge uno nuevo, añádelo aquí)
 Al empezar una sesión, recuérdale a la persona lo que siga abierto y pregunta por dónde quiere seguir.
