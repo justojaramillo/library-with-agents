@@ -8,6 +8,7 @@ export const RATE_LIMITS = {
   register: { limit: 10, windowMs: 3_600_000 },
   login: { limit: 30, windowMs: 60_000 },
   teacherRequest: { limit: 5, windowMs: 3_600_000 },
+  contentUpload: { limit: 20, windowMs: 3_600_000 },
 };
 
 type Window = { count: number; resetAt: number };

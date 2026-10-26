@@ -30,7 +30,9 @@
 
 **F15 + F36 (cambiar mi contraseña con menú de navegación nuevo; formularios de libros y cuentas de mostrador) construidos** (specs `docs/specs/F15-cambiar-mi-contrasena.md` y `docs/specs/F36-formularios-de-libros-y-cuentas.md` aprobadas, notas en `docs/handoffs/F15-cambiar-mi-contrasena.md` y `docs/handoffs/F36-formularios-de-libros-y-cuentas.md`; `check:full` en verde, 3757 pruebas, `security` Aprobado en ambas sin críticos, altos ni medios). **Con esto termina la Ola 2.** Commit local, sin push.
 
-**Siguiente paso:** empezar la Ola 3 (lector con Markdown en Vercel Blob) por **F27** (cargar el contenido digital de un libro y fijar sus copias digitales), que fija el contrato y el almacenamiento de las demás; después, en paralelo, F38 (préstamo digital) y el lector (F28–F31), y F32 (incidentes). Escribir cada spec con `write-spec` y esperar su aprobación; puede hacer falta un ADR para la lectura de Markdown (dependencia nueva). F5–F8, F10–F14, F16, F17, F34–F35, F37 y S1 ya están en `main`.
+**F27 (contenido digital del libro) construido** (spec `docs/specs/F27-contenido-digital-del-libro.md` aprobada, nota en `docs/handoffs/F27-contenido-digital-del-libro.md`; `check:full` en verde, `security` Aprobado con observaciones, sin críticos, altos ni medios). `BLOB_STORE_ID` ya está declarada como variable opcional. Falta la persona: probar en Vercel con Blob real (subir y reemplazar un `.md`, fijar copias) y la revisión visual de `/libros/digital`. F28 debe renderizar Markdown sin HTML crudo; F38 cierra la carrera de `setCopies`.
+
+**Siguiente paso:** seguir la Ola 3 (lector con Markdown en Vercel Blob): F27 ya está; ahora, en paralelo, F38 (préstamo digital) y el lector (F28–F31), y F32 (incidentes). Escribir cada spec con `write-spec` y esperar su aprobación; puede hacer falta un ADR para la lectura de Markdown (dependencia nueva). F5–F8, F10–F14, F16, F17, F34–F35, F37 y S1 ya están en `main`.
 
 ## Plan para la próxima sesión: faltan solo 17 de 39 características
 Llevamos 22 (Olas 1 y 2 completas). Para terminar el proyecto, en este orden y con las specs escritas y aprobadas una por una (`write-spec`):

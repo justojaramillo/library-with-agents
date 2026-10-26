@@ -27,12 +27,17 @@ async function readIsStaff(): Promise<boolean> {
 }
 
 /**
- * F36 · Botón «Registrar libro», solo para el personal. Visitantes y prestatarios no ven nada. Lee la sesión, por eso
+ * F36 · Botón «Registrar libro» y F27 · «Contenido digital», solo para el personal. Visitantes y prestatarios no ven nada. Lee la sesión, por eso
  * va dentro de `<Suspense fallback={null}>`: el resto de la página sigue prerenderizado.
  */
 export async function RegisterBookLink() {
   if (!(await readIsStaff())) {
     return null;
   }
-  return <ButtonLink href="/libros/nuevo">Registrar libro</ButtonLink>;
+  return (
+    <div className="grid w-full gap-2 md:flex md:w-auto">
+      <ButtonLink href="/libros/nuevo">Registrar libro</ButtonLink>
+      <ButtonLink href="/libros/digital">Contenido digital</ButtonLink>
+    </div>
+  );
 }

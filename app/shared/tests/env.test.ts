@@ -144,3 +144,52 @@ describe("Entorno · el informe no revela valores", () => {
     }
   });
 });
+
+describe("Entorno · BLOB_STORE_ID es opcional", () => {
+  const STORE_ID = "store_ID-FALSO-777";
+
+  it("ausente sigue siendo válido y no es un problema", () => {
+    const env = checker({ BLOB_STORE_ID: undefined });
+    expect(env.isValid()).toBe(true);
+    expect(problemNames(env)).not.toContain("BLOB_STORE_ID");
+  });
+
+  it("vacío o solo con espacios sigue siendo válido y no es un problema", () => {
+    for (const value of ["", "   "]) {
+      const env = checker({ BLOB_STORE_ID: value });
+      expect(env.isValid()).toBe(true);
+      expect(problemNames(env)).not.toContain("BLOB_STORE_ID");
+    }
+  });
+
+  it("presente sigue siendo válido", () => {
+    const env = checker({ BLOB_STORE_ID: STORE_ID });
+    expect(env.isValid()).toBe(true);
+    expect(env.problems()).toEqual([]);
+  });
+
+  it("sin ninguna variable, no aparece entre los problemas", () => {
+    expect(problemNames(new EnvChecker({}))).not.toContain("BLOB_STORE_ID");
+  });
+
+  it("si existe, el informe la lista como ✓", () => {
+    const report = checker({ BLOB_STORE_ID: STORE_ID }).report();
+    expect(report).toContain("✓ BLOB_STORE_ID");
+  });
+
+  it("si falta, el informe la lista como pendiente y no como ✗", () => {
+    for (const value of [undefined, "", "   "]) {
+      const report = checker({ BLOB_STORE_ID: value }).report();
+      const line = report.split("\n").find((text) => text.includes("BLOB_STORE_ID")) ?? "";
+      expect(line).toContain("pendiente");
+      expect(line).not.toContain("✗");
+      expect(line).not.toContain("✓");
+    }
+  });
+
+  it("el informe nunca contiene su valor", () => {
+    const report = checker({ BLOB_STORE_ID: STORE_ID }).report();
+    expect(report).not.toContain(STORE_ID);
+    expect(report).not.toContain("ID-FALSO-777");
+  });
+});

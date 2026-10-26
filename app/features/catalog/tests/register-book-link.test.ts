@@ -62,9 +62,11 @@ function home(q = ""): Promise<string> {
   return renderComplete(createElement(Home, { params: Promise.resolve({}), searchParams: Promise.resolve({ q }) }));
 }
 
-/** El HTML sin el enlace «Registrar libro» (para comparar lo demás). */
+/** El HTML sin los botones del personal (para comparar lo demás). F27 (regla 15) añade «Contenido digital» junto a «Registrar libro». */
 function withoutRegisterLink(html: string): string {
-  return html.replace(/<a\b[^>]*href="\/libros\/nuevo"[^>]*>\s*Registrar libro\s*<\/a>/g, "");
+  return html
+    .replace(/<a\b[^>]*href="\/libros\/nuevo"[^>]*>\s*Registrar libro\s*<\/a>/g, "")
+    .replace(/<div\b[^>]*>\s*(?:<a\b[^>]*href="\/libros\/digital"[^>]*>\s*Contenido digital\s*<\/a>)\s*<\/div>/g, "");
 }
 
 describe("F36 · RegisterBookLink (regla 12)", () => {
@@ -84,7 +86,9 @@ describe("F36 · RegisterBookLink (regla 12)", () => {
     const html = await linkOnly();
 
     expect(linkTexts(html, "/libros/nuevo")).toEqual(["Registrar libro"]);
-    expect(openingTags(html, "a")).toHaveLength(1);
+    // F27 (regla 15): junto a «Registrar libro» va «Contenido digital».
+    expect(linkTexts(html, "/libros/digital")).toEqual(["Contenido digital"]);
+    expect(openingTags(html, "a")).toHaveLength(2);
   });
 
   it("el enlace mide al menos 44 px y es una <a>, no un <button>", async () => {

@@ -15,6 +15,7 @@ export const EnvSchema = z.object({
   NEXT_PUBLIC_FIREBASE_PROJECT_ID: NonEmpty,
   NEXT_PUBLIC_FIREBASE_APP_ID: NonEmpty,
   BLOB_READ_WRITE_TOKEN: z.string().trim().optional(),
+  BLOB_STORE_ID: z.string().trim().optional(),
 });
 
 export type EnvName = keyof z.infer<typeof EnvSchema>;
@@ -112,6 +113,9 @@ export class EnvChecker {
       }
       if (name === "BLOB_READ_WRITE_TOKEN" && !(this.env[name] ?? "").trim()) {
         return `  · ${name}: pendiente (se crea al configurar Vercel Blob)`;
+      }
+      if (name === "BLOB_STORE_ID" && !(this.env[name] ?? "").trim()) {
+        return `  · ${name}: pendiente (opcional; id del store de Vercel Blob)`;
       }
       return `  ✓ ${name}`;
     });

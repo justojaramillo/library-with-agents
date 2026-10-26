@@ -14,6 +14,9 @@ import { createFirestoreBookRepository } from "@/features/catalog/server/reposit
 import { createDailyFineStrategy } from "@/features/loans/server/fine-strategy";
 import { createLoanService } from "@/features/loans/server/loan-service";
 import { createFirestoreLoanRepository } from "@/features/loans/server/repository.firestore";
+import { createBlobContentStore } from "@/features/reader/server/content-store.blob";
+import { createFirestoreDigitalBookRepository } from "@/features/reader/server/digital-repository.firestore";
+import { createDigitalService } from "@/features/reader/server/digital-service";
 import { getAdminAuth, getAdminDb } from "@/shared/server/firebase";
 import { describeAuthError } from "@/shared/server/security/firebase-errors";
 
@@ -62,6 +65,13 @@ function build() {
       requests: createFirestoreTeacherRequestRepository(db),
       members: memberRepository,
       identity,
+    }),
+    // F27 · Contenido digital y copias digitales (el servicio comprueba al actor). El contador de préstamos digitales
+    // activos vale 0 hasta F38, que lo cambia por el real.
+    digital: createDigitalService({
+      books: createFirestoreDigitalBookRepository(db),
+      store: createBlobContentStore(),
+      activeLoans: { countActiveDigitalByBook: async () => 0 },
     }),
     loans: createLoanService({
       books: bookRepository,
